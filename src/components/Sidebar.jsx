@@ -1,7 +1,7 @@
 import { useApp } from '../context/AppContext';
 import {
   LayoutDashboard, Calendar, ClipboardList, CheckSquare,
-  FolderOpen, Users, LogOut, ExternalLink, Menu, X
+  FolderOpen, Users, LogOut, ExternalLink, Menu, X, Building2
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -11,6 +11,7 @@ const navItems = [
   { id: 'bookings', label: 'Bookings', icon: ClipboardList },
   { id: 'tasks', label: 'Tasks', icon: CheckSquare },
   { id: 'projects', label: 'Projects', icon: FolderOpen },
+  { id: 'clients', label: 'Clients', icon: Building2 },
   { id: 'team', label: 'Team', icon: Users },
 ];
 
