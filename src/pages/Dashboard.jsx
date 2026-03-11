@@ -62,7 +62,7 @@ export default function Dashboard() {
             <div key={stat.label} className="card" style={{ cursor: stat.action ? 'pointer' : 'default' }} onClick={stat.action}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
                 <div>
-                  <div style={{ fontSize:'28px', fontWeight:'800', fontFamily:'Syne', color: stat.color }}>{stat.value}</div>
+                  <div style={{ fontSize:'28px', fontWeight:'800', fontFamily:"'Playfair Display', serif", color: stat.color }}>{stat.value}</div>
                   <div style={{ fontSize:'12px', fontWeight:'600', color:'var(--text)', marginTop:'2px' }}>{stat.label}</div>
                   <div style={{ fontSize:'11px', color:'var(--text-muted)', marginTop:'2px' }}>{stat.sub}</div>
                 </div>
