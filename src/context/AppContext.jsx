@@ -4,11 +4,14 @@ const today = new Date();
 const fmt = (d) => d.toISOString().split('T')[0];
 
 const TEAM = [
-  { id: 1, name: 'Arjun Mehta', role: 'admin', email: 'arjun@prodco.in', password: 'admin123', title: 'Creative Head' },
-  { id: 2, name: 'Priya Sharma', role: 'member', email: 'priya@prodco.in', password: 'priya123', title: 'Cinematographer' },
-  { id: 3, name: 'Rahul Das', role: 'member', email: 'rahul@prodco.in', password: 'rahul123', title: 'Video Editor' },
-  { id: 4, name: 'Sneha Kapoor', role: 'member', email: 'sneha@prodco.in', password: 'sneha123', title: 'Production Assistant' },
-  { id: 5, name: 'Kiran Bose', role: 'member', email: 'kiran@prodco.in', password: 'kiran123', title: 'Sound Designer' },
+  { id: 1, name: 'Aaram', role: 'admin', email: 'hello@teamaaram.com', password: 'Aaram@111', title: 'Aaram Head' },
+  { id: 2, name: 'VIC', role: 'admin', email: 'hello@vivorporate.com', password: 'Vic@222', title: 'VIC Head' },
+  { id: 3, name: 'Nikhil', role: 'admin', email: 'nikhil@vicorporate.com', password: 'Nikhil@333', title: 'Head' },
+  { id: 4, name: 'Abhiram', role: 'member', email: 'abhiram@vicorporate.com', password: 'abhiram@555', title: 'Creative Head' },
+  { id: 5, name: 'Avinash', role: 'member', email: 'avinash@vicorporate.com', password: 'Avinash@666', title: 'Team Lead' },
+  { id: 6, name: 'Athul', role: 'member', email: 'athul@vicorporate.com', password: 'athul@000', title: 'SEO' },
+  { id: 7, name: 'Sradha', role: 'member', email: 'sradha@vicorporate.com', password: 'sradha@999', title: 'Dev' },
+  { id: 8, name: 'Sabari', role: 'member', email: 'sabari@vicorporate.com', password: 'sabari@1122', title: 'Content Writer' },
 ];
 
 const addDays = (dateStr, n) => {
