@@ -11,7 +11,7 @@ const navItems = [
   { id: 'bookings', label: 'Bookings', icon: ClipboardList },
   { id: 'tasks', label: 'Tasks', icon: CheckSquare },
   { id: 'projects', label: 'Projects', icon: FolderOpen },
-  { id: 'clients', label: 'Clients', icon: Building2 },
+  { id: 'clients', label: 'Clients', icon: Building2, adminOnly: true },
   { id: 'team', label: 'Team', icon: Users },
   { id: 'activity', label: 'Activity', icon: Activity, adminOnly: true },
 ];
