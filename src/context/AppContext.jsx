@@ -197,6 +197,19 @@ export function AppProvider({ children }) {
     } : c));
   };
 
+  const deleteClient = async (clientId) => {
+    await supabase.from('projects').delete().eq('client_id', clientId);
+    await supabase.from('clients').delete().eq('id', clientId);
+    setClients(p => p.filter(c => c.id !== clientId));
+  };
+
+  const deleteProject = async (clientId, projectId) => {
+    await supabase.from('projects').delete().eq('id', projectId);
+    setClients(p => p.map(c => c.id === clientId ? {
+      ...c, projects: c.projects.filter(pr => pr.id !== projectId)
+    } : c));
+  };
+
   const submitBooking = async (booking) => {
     const { data } = await supabase.from('bookings').insert([{
       client_name: booking.clientName, project_name: booking.projectName,
@@ -249,7 +262,7 @@ export function AppProvider({ children }) {
       shoots, addShoot, updateShoot, deleteShoot,
       dateMarks, setDateMark, removeDateMark,
       tasks, addTask, updateTask, deleteTask,
-      clients, addClient, addProject, updateProject,
+      clients, addClient, addProject, updateProject, deleteClient, deleteProject,
       bookings, submitBooking, approveBooking, rejectBooking,
       team, notifications
     }}>
