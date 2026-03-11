@@ -147,7 +147,7 @@ export default function ProjectsPage() {
           { label:'Active', value: clients.reduce((a,c)=>a+c.projects.filter(p=>p.status==='active').length,0), color:'#6dc76d' },
         ].map(s => (
           <div key={s.label} style={{ padding:'12px 18px', background:'var(--surface)', border:'1px solid var(--border)', borderRadius:'10px' }}>
-            <div style={{ fontSize:'22px', fontWeight:'800', fontFamily:'Syne', color:s.color }}>{s.value}</div>
+            <div style={{ fontSize:'22px', fontWeight:'800', fontFamily:"'Playfair Display', serif", color:s.color }}>{s.value}</div>
             <div style={{ fontSize:'11px', color:'var(--text-muted)' }}>{s.label}</div>
           </div>
         ))}
