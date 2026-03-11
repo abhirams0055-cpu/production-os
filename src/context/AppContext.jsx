@@ -241,6 +241,11 @@ export function AppProvider({ children }) {
     setBookings(p => p.map(b => b.id === id ? { ...b, status: 'rejected' } : b));
   };
 
+  const deleteBooking = async (id) => {
+    await supabase.from('bookings').delete().eq('id', id);
+    setBookings(p => p.filter(b => b.id !== id));
+  };
+
   const addMember = (member) => {
     const newId = Math.max(...team.map(m => m.id), 0) + 1;
     const newMember = { ...member, id: newId };
@@ -282,7 +287,7 @@ export function AppProvider({ children }) {
       dateMarks, setDateMark, removeDateMark,
       tasks, addTask, updateTask, deleteTask,
       clients, addClient, addProject, updateProject, deleteClient, deleteProject,
-      bookings, submitBooking, approveBooking, rejectBooking,
+      bookings, submitBooking, approveBooking, rejectBooking, deleteBooking,
       team, addMember, updateMember, deleteMember, notifications
     }}>
       {children}
