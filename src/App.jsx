@@ -7,6 +7,7 @@ import BookingsPage from './pages/BookingsPage';
 import TasksPage from './pages/TasksPage';
 import ProjectsPage from './pages/ProjectsPage';
 import TeamPage from './pages/TeamPage';
+import PublicBooking from './pages/PublicBooking';
 import ClientPortal from './pages/ClientPortal';
 import ClientAccountsPage from './pages/ClientAccountsPage';
 
@@ -21,13 +22,16 @@ const pages = {
 };
 
 export default function App() {
-  const { currentUser, view, clientUser, clientLogout, loadData } = useApp();
+  const { currentUser, view, publicPage, clientUser, clientLogout } = useApp();
 
-  // Client portal
+  // Client portal (logged in as client)
   if (clientUser) return <ClientPortal clientUser={clientUser} onLogout={clientLogout} />;
 
-  // Team not logged in
+  // Not logged in as team
   if (!currentUser) return <Login />;
+
+  // Public booking page (sidebar link or unauthenticated)
+  if (publicPage) return <PublicBooking />;
 
   const Page = pages[view] || Dashboard;
 
