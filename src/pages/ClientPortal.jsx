@@ -14,9 +14,10 @@ export default function ClientPortal({ clientUser, onLogout }) {
   const [shootDays, setShootDays] = useState(1);
   const [errors, setErrors] = useState({});
 
+  // Match bookings by clientUser id stored at submit time, or fall back to phone/name
   const myBookings = bookings.filter(b =>
-    b.clientName?.toLowerCase() === clientUser.companyName?.toLowerCase() ||
-    b.phone === clientUser.phone
+    b.clientUserId === clientUser.id ||
+    (b.phone === clientUser.phone && b.clientName?.toLowerCase() === clientUser.companyName?.toLowerCase())
   );
 
   const today = new Date(); today.setHours(0,0,0,0);
@@ -37,7 +38,8 @@ export default function ClientPortal({ clientUser, onLogout }) {
     if (new Date(date) < today) return true;
     const mark = dateMarks.find(m => m.date === date);
     if (mark && (mark.status === 'busy' || mark.status === 'tentative')) return true;
-    if (shoots.find(s => s.date === date)) return true;
+    // Only block if there's an approved shoot on that date
+    if (shoots.find(s => s.date === date && s.status !== 'rejected')) return true;
     return false;
   };
 
@@ -73,6 +75,7 @@ export default function ClientPortal({ clientUser, onLogout }) {
       preferredDate: selectedDates[0],
       selectedDates,
       shootDays,
+      clientUserId: clientUser.id,
     });
     setSubmitted(true);
   };
