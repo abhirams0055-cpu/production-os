@@ -29,7 +29,7 @@ export default function App() {
   return (
     <div style={{ display:'flex', minHeight:'100vh' }}>
       <Sidebar />
-      <main style={{ flex:1, overflowY:'auto', minHeight:'100vh' }}>
+      <main className="main-content" style={{ flex:1, overflowY:'auto', minHeight:'100vh' }}>
         <Page />
       </main>
     </div>
