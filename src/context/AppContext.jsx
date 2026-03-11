@@ -26,85 +26,15 @@ const d = (offset) => {
   return fmt(dt);
 };
 
-const INITIAL_SHOOTS = [
-  {
-    id: 1, clientName: 'PADMA', projectName: 'Kurti Launch Campaign',
-    shootType: 'Reel', date: d(3), location: 'Studio A, Andheri West',
-    crew: [2, 3], notes: 'Need 3 outfit changes. Golden hour preferred.',
-    docsLink: 'https://docs.google.com/document/d/example1', status: 'confirmed'
-  },
-  {
-    id: 2, clientName: 'TechVibe', projectName: 'App Launch Ad',
-    shootType: 'Advertisement', date: d(7), location: 'Bandra Rooftop',
-    crew: [2, 4, 5], notes: 'Drone shots required. Book license.',
-    docsLink: 'https://docs.google.com/document/d/example2', status: 'confirmed'
-  },
-  {
-    id: 3, clientName: 'PADMA', projectName: 'Festive Collection Reel',
-    shootType: 'Reel', date: d(14), location: 'Juhu Beach',
-    crew: [2, 3, 4], notes: 'Sunset shoot. Start at 4pm.',
-    docsLink: 'https://docs.google.com/document/d/example3', status: 'confirmed'
-  },
-  {
-    id: 4, clientName: 'NovaBrands', projectName: 'Brand Story Film',
-    shootType: 'Brand Film', date: d(21), location: 'Factory, Thane',
-    crew: [2, 3, 4, 5], notes: 'Full day shoot. Factory walkthrough + interviews.',
-    docsLink: 'https://docs.google.com/document/d/example4', status: 'confirmed'
-  },
-];
+const INITIAL_SHOOTS = [];
 
-const INITIAL_DATE_MARKS = [
-  { date: d(5), status: 'busy' },
-  { date: d(6), status: 'busy' },
-  { date: d(10), status: 'tentative' },
-  { date: d(15), status: 'available' },
-  { date: d(16), status: 'available' },
-  { date: d(20), status: 'available' },
-];
+const INITIAL_DATE_MARKS = [];
 
-const INITIAL_TASKS = [
-  { id: 1, title: 'Edit Kurti Launch Reel', description: 'First cut with color grading', assignedTo: 3, deadline: d(5), priority: 'high', status: 'in-progress', project: 'Kurti Launch Campaign' },
-  { id: 2, title: 'Location recce - Bandra Rooftop', description: 'Check lighting conditions and permission', assignedTo: 4, deadline: d(4), priority: 'high', status: 'pending', project: 'App Launch Ad' },
-  { id: 3, title: 'Sound design - TechVibe Ad', description: 'Background score + SFX', assignedTo: 5, deadline: d(9), priority: 'medium', status: 'pending', project: 'App Launch Ad' },
-  { id: 4, title: 'Mood board - NovaBrands', description: 'Create reference board for brand film', assignedTo: 2, deadline: d(12), priority: 'medium', status: 'completed', project: 'Brand Story Film' },
-  { id: 5, title: 'Script review - Festive Reel', description: 'Review and approve final script', assignedTo: 1, deadline: d(10), priority: 'low', status: 'pending', project: 'Festive Collection Reel' },
-];
+const INITIAL_TASKS = [];
 
-const INITIAL_CLIENTS = [
-  {
-    id: 1, name: 'PADMA', contact: 'Meera Joshi', phone: '+91 98765 43210', email: 'meera@padma.in',
-    projects: [
-      { id: 1, name: 'Kurti Launch Campaign', status: 'active', shootId: 1, docsLink: 'https://docs.google.com/document/d/example1', team: [2,3] },
-      { id: 2, name: 'Festive Collection Reel', status: 'active', shootId: 3, docsLink: 'https://docs.google.com/document/d/example3', team: [2,3,4] },
-      { id: 3, name: 'Product Photoshoot', status: 'planned', shootId: null, docsLink: '', team: [2,4] },
-    ]
-  },
-  {
-    id: 2, name: 'TechVibe', contact: 'Rohan Verma', phone: '+91 87654 32109', email: 'rohan@techvibe.io',
-    projects: [
-      { id: 4, name: 'App Launch Ad', status: 'active', shootId: 2, docsLink: 'https://docs.google.com/document/d/example2', team: [2,4,5] },
-    ]
-  },
-  {
-    id: 3, name: 'NovaBrands', contact: 'Aarav Singh', phone: '+91 76543 21098', email: 'aarav@novabrands.com',
-    projects: [
-      { id: 5, name: 'Brand Story Film', status: 'active', shootId: 4, docsLink: 'https://docs.google.com/document/d/example4', team: [2,3,4,5] },
-    ]
-  },
-];
+const INITIAL_CLIENTS = [];
 
-const INITIAL_BOOKINGS = [
-  {
-    id: 1, clientName: 'Zara Studios', projectName: 'Summer Collection Lookbook',
-    contactName: 'Fatima Khan', phone: '+91 91234 56789', email: 'fatima@zarastudios.com',
-    preferredDate: d(18), shootDays: 2, status: 'pending', submittedAt: new Date(Date.now() - 3600000).toISOString()
-  },
-  {
-    id: 2, clientName: 'GreenLeaf Foods', projectName: 'Product Launch YouTube Video',
-    contactName: 'Deepak Nair', phone: '+91 80987 65432', email: 'deepak@greenleaf.com',
-    preferredDate: d(25), shootDays: 1, status: 'pending', submittedAt: new Date(Date.now() - 7200000).toISOString()
-  },
-];
+const INITIAL_BOOKINGS = [];
 
 const AppContext = createContext(null);
 
