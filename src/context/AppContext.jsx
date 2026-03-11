@@ -15,8 +15,14 @@ const TEAM = [
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [view, setView] = useState('login');
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('aaram_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [view, setView] = useState(() => {
+    const saved = localStorage.getItem('aaram_user');
+    return saved ? 'dashboard' : 'login';
+  });
   const [publicPage, setPublicPage] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -84,12 +90,19 @@ export function AppProvider({ children }) {
 
   const login = (email, password) => {
     const user = TEAM.find(u => u.email === email && u.password === password);
-    if (user) { setCurrentUser(user); setView('dashboard'); return true; }
+    if (user) {
+      setCurrentUser(user);
+      localStorage.setItem('aaram_user', JSON.stringify(user));
+      setView('dashboard');
+      return true;
+    }
     return false;
   };
 
   const logout = () => {
-    setCurrentUser(null); setView('login');
+    setCurrentUser(null);
+    localStorage.removeItem('aaram_user');
+    setView('login');
     setShoots([]); setTasks([]); setClients([]); setBookings([]); setDateMarksState([]);
   };
 
