@@ -32,6 +32,14 @@ export function AppProvider({ children }) {
   const [clients, setClients] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [team, setTeam] = useState(TEAM);
+  const [clientAccounts, setClientAccounts] = useState(() => {
+    const saved = localStorage.getItem('aaram_client_accounts');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [clientUser, setClientUser] = useState(() => {
+    const saved = localStorage.getItem('aaram_client_user');
+    return saved ? JSON.parse(saved) : null;
+  });
 
   const loadData = async () => {
     setLoading(true);
@@ -259,6 +267,45 @@ export function AppProvider({ children }) {
     setBookings(p => p.filter(b => b.id !== id));
   };
 
+  const clientLogin = (email, password) => {
+    const acc = clientAccounts.find(a => (a.email === email || a.phone === email) && a.password === password);
+    if (acc) {
+      setClientUser(acc);
+      localStorage.setItem('aaram_client_user', JSON.stringify(acc));
+      return true;
+    }
+    return false;
+  };
+
+  const clientLogout = () => {
+    setClientUser(null);
+    localStorage.removeItem('aaram_client_user');
+  };
+
+  const saveClientAccounts = (accounts) => {
+    setClientAccounts(accounts);
+    localStorage.setItem('aaram_client_accounts', JSON.stringify(accounts));
+  };
+
+  const addClientAccount = (account) => {
+    const newAcc = { ...account, id: Date.now() };
+    saveClientAccounts([...clientAccounts, newAcc]);
+  };
+
+  const updateClientAccount = (id, account) => {
+    const updated = clientAccounts.map(a => a.id === id ? { ...a, ...account } : a);
+    saveClientAccounts(updated);
+    if (clientUser?.id === id) {
+      const updatedUser = { ...clientUser, ...account };
+      setClientUser(updatedUser);
+      localStorage.setItem('aaram_client_user', JSON.stringify(updatedUser));
+    }
+  };
+
+  const deleteClientAccount = (id) => {
+    saveClientAccounts(clientAccounts.filter(a => a.id !== id));
+  };
+
   const addMember = (member) => {
     const newId = Math.max(...team.map(m => m.id), 0) + 1;
     const newMember = { ...member, id: newId };
@@ -301,7 +348,9 @@ export function AppProvider({ children }) {
       tasks, addTask, updateTask, deleteTask,
       clients, addClient, addProject, updateProject, deleteClient, deleteProject,
       bookings, submitBooking, approveBooking, rejectBooking, deleteBooking, updateBooking,
-      team, addMember, updateMember, deleteMember, notifications
+      team, addMember, updateMember, deleteMember,
+      clientAccounts, clientUser, clientLogin, clientLogout, addClientAccount, updateClientAccount, deleteClientAccount,
+      notifications
     }}>
       {children}
     </AppContext.Provider>
