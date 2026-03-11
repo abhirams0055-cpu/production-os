@@ -99,6 +99,22 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Syne', sans-serif; }
   gap: 6px;
 }
 .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+.btn-danger {
+  background: rgba(255,60,60,0.1);
+  color: #ff6b6b;
+  border: 1px solid rgba(255,60,60,0.25);
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-danger:hover { background: rgba(255,60,60,0.2); border-color: rgba(255,60,60,0.5); }
 
 .btn-danger {
   background: rgba(255,60,60,0.1);
