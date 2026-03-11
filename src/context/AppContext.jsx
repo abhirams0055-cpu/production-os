@@ -93,8 +93,8 @@ export function AppProvider({ children }) {
   };
 
   useEffect(() => {
-    if (currentUser) loadData();
-  }, [currentUser]);
+    if (currentUser || clientUser) loadData();
+  }, [currentUser, clientUser]);
 
   const login = (email, password) => {
     const user = TEAM.find(u => u.email === email && u.password === password);
@@ -223,7 +223,7 @@ export function AppProvider({ children }) {
       client_name: booking.clientName, project_name: booking.projectName,
       contact_name: booking.contactName, phone: booking.phone, email: booking.email,
       preferred_date: booking.preferredDate, shoot_days: booking.shootDays, status: 'pending',
-      client_user_id: booking.clientUserId || null,
+      client_user_id: booking.clientUserId ? String(booking.clientUserId) : null,
     }]).select().single();
     if (data) setBookings(p => [{ id: data.id, clientName: data.client_name, projectName: data.project_name, contactName: data.contact_name, phone: data.phone, email: data.email, preferredDate: data.preferred_date, shootDays: data.shoot_days, status: data.status, submittedAt: data.submitted_at, notes: data.notes || '', clientUserId: data.client_user_id }, ...p]);
   };
@@ -274,6 +274,7 @@ export function AppProvider({ children }) {
     if (acc) {
       setClientUser(acc);
       localStorage.setItem('aaram_client_user', JSON.stringify(acc));
+      loadData(); // load shoots, dateMarks, bookings for portal
       return true;
     }
     return false;
