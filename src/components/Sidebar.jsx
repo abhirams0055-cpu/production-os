@@ -1,7 +1,7 @@
 import { useApp } from '../context/AppContext';
 import {
   LayoutDashboard, Calendar, ClipboardList, CheckSquare,
-  FolderOpen, Users, LogOut, ExternalLink, Menu, X, Building2
+  FolderOpen, Users, LogOut, ExternalLink, Menu, X, Building2, Activity
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -13,6 +13,7 @@ const navItems = [
   { id: 'projects', label: 'Projects', icon: FolderOpen },
   { id: 'clients', label: 'Clients', icon: Building2 },
   { id: 'team', label: 'Team', icon: Users },
+  { id: 'activity', label: 'Activity', icon: Activity, adminOnly: true },
 ];
 
 export default function Sidebar() {
@@ -67,7 +68,7 @@ export default function Sidebar() {
           <img src="/logo.png" alt="Team Aaram" style={{ width:'120px', objectFit:'contain' }} />
         </div>
         <nav style={{ display:'flex', flexDirection:'column', gap:'4px', flex:1 }}>
-          {navItems.map(item => <NavItem key={item.id} item={item} />)}
+          {navItems.filter(item => !item.adminOnly || currentUser?.role === 'admin').map(item => <NavItem key={item.id} item={item} />)}
           <button onClick={() => setPublicPage(true)} style={{
             display:'flex', alignItems:'center', gap:'10px',
             padding:'11px 14px', borderRadius:'10px', cursor:'pointer',
@@ -137,7 +138,7 @@ export default function Sidebar() {
               </button>
             </div>
             <nav style={{ display:'flex', flexDirection:'column', gap:'4px', flex:1 }}>
-              {navItems.map(item => <NavItem key={item.id} item={item} onClick={() => setMobileOpen(false)} />)}
+              {navItems.filter(item => !item.adminOnly || currentUser?.role === 'admin').map(item => <NavItem key={item.id} item={item} onClick={() => setMobileOpen(false)} />)}
               <button onClick={() => { setPublicPage(true); setMobileOpen(false); }} style={{
                 display:'flex', alignItems:'center', gap:'10px',
                 padding:'11px 14px', borderRadius:'10px', cursor:'pointer',
@@ -181,7 +182,7 @@ export default function Sidebar() {
         padding:'6px 4px', zIndex:50,
         justifyContent:'space-around', alignItems:'center'
       }}>
-        {navItems.map(item => {
+        {navItems.filter(item => !item.adminOnly || currentUser?.role === 'admin').map(item => {
           const Icon = item.icon;
           const isActive = view === item.id;
           const badge = item.id === 'bookings' && pendingCount > 0 ? pendingCount : null;
