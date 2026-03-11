@@ -32,6 +32,25 @@ export function AppProvider({ children }) {
   const [clients, setClients] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [team, setTeam] = useState(TEAM);
+  const [activityLog, setActivityLog] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('aaram_activity') || '[]'); } catch { return []; }
+  });
+
+  const logActivity = (action, message, user) => {
+    const who = user || null;
+    if (!who) return;
+    const entry = { id: Date.now() + Math.random(), action, message, userId: who.id, userName: who.name, ts: new Date().toISOString() };
+    setActivityLog(prev => {
+      const updated = [entry, ...prev].slice(0, 500); // keep last 500
+      localStorage.setItem('aaram_activity', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const clearActivityLog = () => {
+    setActivityLog([]);
+    localStorage.removeItem('aaram_activity');
+  };
   const [clientAccounts, setClientAccounts] = useState(() => {
     const saved = localStorage.getItem('aaram_client_accounts');
     return saved ? JSON.parse(saved) : [];
@@ -120,7 +139,10 @@ export function AppProvider({ children }) {
       shoot_type: shoot.shootType, date: shoot.date, location: shoot.location,
       crew: shoot.crew, notes: shoot.notes, docs_link: shoot.docsLink, status: 'confirmed'
     }]).select().single();
-    if (data) setShoots(p => [...p, { id: data.id, clientName: data.client_name, projectName: data.project_name, shootType: data.shoot_type, date: data.date, location: data.location, crew: data.crew || [], notes: data.notes, docsLink: data.docs_link, status: data.status }]);
+    if (data) {
+      setShoots(p => [...p, { id: data.id, clientName: data.client_name, projectName: data.project_name, shootType: data.shoot_type, date: data.date, location: data.location, crew: data.crew || [], notes: data.notes, docsLink: data.docs_link, status: data.status }]);
+      logActivity('shoot_added', `added shoot "${shoot.projectName}" for ${shoot.clientName} on ${shoot.date}`, currentUser);
+    }
   };
 
   const updateShoot = async (id, shoot) => {
@@ -130,11 +152,14 @@ export function AppProvider({ children }) {
       crew: shoot.crew, notes: shoot.notes, docs_link: shoot.docsLink
     }).eq('id', id);
     setShoots(p => p.map(s => s.id === id ? { ...s, ...shoot } : s));
+    logActivity('shoot_updated', `updated shoot "${shoot.projectName}"`, currentUser);
   };
 
   const deleteShoot = async (id) => {
+    const shoot = shoots.find(s => s.id === id);
     await supabase.from('shoots').delete().eq('id', id);
     setShoots(p => p.filter(s => s.id !== id));
+    logActivity('shoot_deleted', `deleted shoot "${shoot?.projectName || id}"`, currentUser);
   };
 
   const setDateMark = async (date, status) => {
@@ -159,28 +184,42 @@ export function AppProvider({ children }) {
       assigned_to: task.assignedTo, deadline: task.deadline,
       priority: task.priority, status: task.status, project: task.project
     }]).select().single();
-    if (data) setTasks(p => [...p, { id: data.id, title: data.title, description: data.description, assignedTo: data.assigned_to, deadline: data.deadline, priority: data.priority, status: data.status, project: data.project }]);
+    if (data) {
+      setTasks(p => [...p, { id: data.id, title: data.title, description: data.description, assignedTo: data.assigned_to, deadline: data.deadline, priority: data.priority, status: data.status, project: data.project }]);
+      logActivity('task_added', `added task "${task.title}"`, currentUser);
+    }
   };
 
   const updateTask = async (id, task) => {
+    const prev = tasks.find(t => t.id === id);
     await supabase.from('tasks').update({
       title: task.title, description: task.description,
       assigned_to: task.assignedTo, deadline: task.deadline,
       priority: task.priority, status: task.status, project: task.project
     }).eq('id', id);
     setTasks(p => p.map(t => t.id === id ? { ...t, ...task } : t));
+    if (prev?.status !== 'completed' && task.status === 'completed') {
+      logActivity('task_completed', `completed task "${task.title}"`, currentUser);
+    } else {
+      logActivity('task_updated', `updated task "${task.title}"`, currentUser);
+    }
   };
 
   const deleteTask = async (id) => {
+    const task = tasks.find(t => t.id === id);
     await supabase.from('tasks').delete().eq('id', id);
     setTasks(p => p.filter(t => t.id !== id));
+    logActivity('task_deleted', `deleted task "${task?.title || id}"`, currentUser);
   };
 
   const addClient = async (client) => {
     const { data } = await supabase.from('clients').insert([{
       name: client.name, contact: client.contact, phone: client.phone, email: client.email
     }]).select().single();
-    if (data) setClients(p => [...p, { id: data.id, name: data.name, contact: data.contact, phone: data.phone, email: data.email, projects: [] }]);
+    if (data) {
+      setClients(p => [...p, { id: data.id, name: data.name, contact: data.contact, phone: data.phone, email: data.email, projects: [] }]);
+      logActivity('client_added', `added client "${client.name}"`, currentUser);
+    }
   };
 
   const addProject = async (clientId, project) => {
@@ -192,6 +231,7 @@ export function AppProvider({ children }) {
       setClients(p => p.map(c => c.id === clientId ? {
         ...c, projects: [...c.projects, { id: data.id, name: data.name, status: data.status, shootId: data.shoot_id, docsLink: data.docs_link, team: data.team || [] }]
       } : c));
+      logActivity('project_added', `added project "${project.name}"`, currentUser);
     }
   };
 
@@ -203,19 +243,25 @@ export function AppProvider({ children }) {
     setClients(p => p.map(c => c.id === clientId ? {
       ...c, projects: c.projects.map(pr => pr.id === projectId ? { ...pr, ...project } : pr)
     } : c));
+    logActivity('project_updated', `updated project "${project.name}"`, currentUser);
   };
 
   const deleteClient = async (clientId) => {
+    const client = clients.find(c => c.id === clientId);
     await supabase.from('projects').delete().eq('client_id', clientId);
     await supabase.from('clients').delete().eq('id', clientId);
     setClients(p => p.filter(c => c.id !== clientId));
+    logActivity('client_deleted', `deleted client "${client?.name || clientId}"`, currentUser);
   };
 
   const deleteProject = async (clientId, projectId) => {
+    const client = clients.find(c => c.id === clientId);
+    const project = client?.projects?.find(p => p.id === projectId);
     await supabase.from('projects').delete().eq('id', projectId);
     setClients(p => p.map(c => c.id === clientId ? {
       ...c, projects: c.projects.filter(pr => pr.id !== projectId)
     } : c));
+    logActivity('project_deleted', `deleted project "${project?.name || projectId}"`, currentUser);
   };
 
   const submitBooking = async (booking) => {
@@ -227,13 +273,13 @@ export function AppProvider({ children }) {
     }]).select().single();
     if (data) setBookings(p => [{ id: data.id, clientName: data.client_name, projectName: data.project_name, contactName: data.contact_name, phone: data.phone, email: data.email, preferredDate: data.preferred_date, shootDays: data.shoot_days, status: data.status, submittedAt: data.submitted_at, notes: data.notes || '', clientUserId: data.client_user_id }, ...p]);
   };
-  };
 
   const approveBooking = async (id) => {
     const booking = bookings.find(b => b.id === id);
     if (!booking) return;
     await supabase.from('bookings').update({ status: 'approved' }).eq('id', id);
     setBookings(p => p.map(b => b.id === id ? { ...b, status: 'approved' } : b));
+    logActivity('booking_approved', `approved booking from ${booking.clientName}`, currentUser);
     for (let i = 0; i < booking.shootDays; i++) {
       const d = new Date(booking.preferredDate);
       d.setDate(d.getDate() + i);
@@ -247,8 +293,10 @@ export function AppProvider({ children }) {
   };
 
   const rejectBooking = async (id) => {
+    const booking = bookings.find(b => b.id === id);
     await supabase.from('bookings').update({ status: 'rejected' }).eq('id', id);
     setBookings(p => p.map(b => b.id === id ? { ...b, status: 'rejected' } : b));
+    logActivity('booking_rejected', `rejected booking from ${booking?.clientName || id}`, currentUser);
   };
 
   const updateBooking = async (id, updates) => {
@@ -265,8 +313,10 @@ export function AppProvider({ children }) {
   };
 
   const deleteBooking = async (id) => {
+    const booking = bookings.find(b => b.id === id);
     await supabase.from('bookings').delete().eq('id', id);
     setBookings(p => p.filter(b => b.id !== id));
+    logActivity('booking_deleted', `deleted booking from ${booking?.clientName || id}`, currentUser);
   };
 
   const clientLogin = (email, password) => {
@@ -313,19 +363,23 @@ export function AppProvider({ children }) {
     const newId = Math.max(...team.map(m => m.id), 0) + 1;
     const newMember = { ...member, id: newId };
     setTeam(p => [...p, newMember]);
+    logActivity('member_added', `added team member "${member.name}" (${member.title})`, currentUser);
   };
 
   const updateMember = (id, member) => {
+    const existing = team.find(m => m.id === id);
     setTeam(p => p.map(m => m.id === id ? { ...m, ...member } : m));
-    // If editing self, update currentUser too
     if (id === JSON.parse(localStorage.getItem('aaram_user') || '{}')?.id) {
       const updated = { ...JSON.parse(localStorage.getItem('aaram_user')), ...member };
       localStorage.setItem('aaram_user', JSON.stringify(updated));
     }
+    logActivity('member_updated', `updated team member "${member.name || existing?.name}"`, currentUser);
   };
 
   const deleteMember = (id) => {
+    const member = team.find(m => m.id === id);
     setTeam(p => p.filter(m => m.id !== id));
+    logActivity('member_deleted', `removed team member "${member?.name || id}"`, currentUser);
   };
 
   const today = new Date();
@@ -352,6 +406,7 @@ export function AppProvider({ children }) {
       clients, addClient, addProject, updateProject, deleteClient, deleteProject,
       bookings, submitBooking, approveBooking, rejectBooking, deleteBooking, updateBooking,
       team, addMember, updateMember, deleteMember,
+      activityLog, clearActivityLog,
       clientAccounts, clientUser, clientLogin, clientLogout, addClientAccount, updateClientAccount, deleteClientAccount,
       notifications
     }}>
