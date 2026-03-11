@@ -60,26 +60,6 @@ export default function Login() {
           </button>
         </div>
 
-        {/* Demo hints */}
-        <div className="card" style={{ marginTop:'16px', padding:'16px' }}>
-          <p style={{ color:'var(--text-muted)', fontSize:'11px', fontWeight:'600', letterSpacing:'0.08em', textTransform:'uppercase', fontFamily:'Syne', marginBottom:'10px' }}>Demo Accounts</p>
-          <div style={{ display:'flex', flexDirection:'column', gap:'6px' }}>
-            {[
-              { email:'arjun@prodco.in', pass:'admin123', role:'Admin', name:'Arjun Mehta' },
-              { email:'priya@prodco.in', pass:'priya123', role:'Member', name:'Priya Sharma' },
-            ].map(u => (
-              <div key={u.email} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 10px', background:'var(--surface2)', borderRadius:'6px', cursor:'pointer' }}
-                onClick={() => { setEmail(u.email); setPassword(u.pass); }}>
-                <div>
-                  <span style={{ color:'var(--text)', fontSize:'12px', fontWeight:'500' }}>{u.name}</span>
-                  <span style={{ color:'var(--text-muted)', fontSize:'11px', marginLeft:'6px' }}>({u.role})</span>
-                </div>
-                <span style={{ color:'var(--text-dim)', fontSize:'11px' }}>{u.pass}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
         <div style={{ textAlign:'center', marginTop:'20px' }}>
           <button style={{ background:'none', border:'none', color:'var(--text-muted)', fontSize:'12px', cursor:'pointer', textDecoration:'underline' }}
             onClick={() => setPublicPage(true)}>
