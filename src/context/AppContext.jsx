@@ -76,7 +76,7 @@ export function AppProvider({ children }) {
         id: b.id, clientName: b.client_name, projectName: b.project_name,
         contactName: b.contact_name, phone: b.phone, email: b.email,
         preferredDate: b.preferred_date, shootDays: b.shoot_days,
-        status: b.status, submittedAt: b.submitted_at
+        status: b.status, submittedAt: b.submitted_at, notes: b.notes || ''
       })));
     } catch (err) {
       console.error('Error loading data:', err);
@@ -241,6 +241,19 @@ export function AppProvider({ children }) {
     setBookings(p => p.map(b => b.id === id ? { ...b, status: 'rejected' } : b));
   };
 
+  const updateBooking = async (id, updates) => {
+    await supabase.from('bookings').update({
+      client_name: updates.clientName,
+      contact_name: updates.contactName,
+      phone: updates.phone,
+      email: updates.email,
+      preferred_date: updates.preferredDate,
+      shoot_days: updates.shootDays,
+      notes: updates.notes,
+    }).eq('id', id);
+    setBookings(p => p.map(b => b.id === id ? { ...b, ...updates } : b));
+  };
+
   const deleteBooking = async (id) => {
     await supabase.from('bookings').delete().eq('id', id);
     setBookings(p => p.filter(b => b.id !== id));
@@ -287,7 +300,7 @@ export function AppProvider({ children }) {
       dateMarks, setDateMark, removeDateMark,
       tasks, addTask, updateTask, deleteTask,
       clients, addClient, addProject, updateProject, deleteClient, deleteProject,
-      bookings, submitBooking, approveBooking, rejectBooking, deleteBooking,
+      bookings, submitBooking, approveBooking, rejectBooking, deleteBooking, updateBooking,
       team, addMember, updateMember, deleteMember, notifications
     }}>
       {children}
