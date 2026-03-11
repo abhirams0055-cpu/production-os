@@ -84,7 +84,7 @@ export function AppProvider({ children }) {
         id: b.id, clientName: b.client_name, projectName: b.project_name,
         contactName: b.contact_name, phone: b.phone, email: b.email,
         preferredDate: b.preferred_date, shootDays: b.shoot_days,
-        status: b.status, submittedAt: b.submitted_at, notes: b.notes || ''
+        status: b.status, submittedAt: b.submitted_at, notes: b.notes || '', clientUserId: b.client_user_id || null
       })));
     } catch (err) {
       console.error('Error loading data:', err);
@@ -222,9 +222,11 @@ export function AppProvider({ children }) {
     const { data } = await supabase.from('bookings').insert([{
       client_name: booking.clientName, project_name: booking.projectName,
       contact_name: booking.contactName, phone: booking.phone, email: booking.email,
-      preferred_date: booking.preferredDate, shoot_days: booking.shootDays, status: 'pending'
+      preferred_date: booking.preferredDate, shoot_days: booking.shootDays, status: 'pending',
+      client_user_id: booking.clientUserId || null,
     }]).select().single();
-    if (data) setBookings(p => [{ id: data.id, clientName: data.client_name, projectName: data.project_name, contactName: data.contact_name, phone: data.phone, email: data.email, preferredDate: data.preferred_date, shootDays: data.shoot_days, status: data.status, submittedAt: data.submitted_at }, ...p]);
+    if (data) setBookings(p => [{ id: data.id, clientName: data.client_name, projectName: data.project_name, contactName: data.contact_name, phone: data.phone, email: data.email, preferredDate: data.preferred_date, shootDays: data.shoot_days, status: data.status, submittedAt: data.submitted_at, notes: data.notes || '', clientUserId: data.client_user_id }, ...p]);
+  };
   };
 
   const approveBooking = async (id) => {
