@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { X, CheckCircle, Calendar, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
+import { X, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -9,9 +9,9 @@ export default function PublicBooking() {
   const { dateMarks, shoots, submitBooking, setPublicPage } = useApp();
   const [calDate, setCalDate] = useState(new Date());
   const [submitted, setSubmitted] = useState(false);
+  const [selectedDates, setSelectedDates] = useState([]);
   const [form, setForm] = useState({
-    clientName:'', projectName:'', contactName:'', phone:'', email:'',
-    preferredDate:'', shootDays:1
+    clientName:'', contactName:'', phone:'', email:'', shootDays: 1
   });
   const [errors, setErrors] = useState({});
 
@@ -30,7 +30,7 @@ export default function PublicBooking() {
     const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     cells.push({ day: d, current: true, date: dateStr });
   }
-  while (cells.length < 42) { cells.push({ day: cells.length - firstDay - daysInMonth + 1, current: false, date: null }); }
+  while (cells.length < 42) cells.push({ day: cells.length - firstDay - daysInMonth + 1, current: false, date: null });
 
   const isBusy = (date) => {
     if (!date) return true;
@@ -48,42 +48,72 @@ export default function PublicBooking() {
     return mark?.status === 'available';
   };
 
+  const handleDateClick = (date) => {
+    if (!date || isBusy(date)) return;
+    const maxDays = form.shootDays;
+
+    if (selectedDates.includes(date)) {
+      setSelectedDates(p => p.filter(d => d !== date));
+    } else {
+      if (selectedDates.length < maxDays) {
+        setSelectedDates(p => [...p, date].sort());
+      } else {
+        // Replace oldest selection
+        setSelectedDates(p => [...p.slice(1), date].sort());
+      }
+    }
+  };
+
+  const handleShootDaysChange = (n) => {
+    setForm(p => ({ ...p, shootDays: n }));
+    setSelectedDates(prev => prev.slice(0, n));
+  };
+
   const validate = () => {
     const e = {};
     if (!form.clientName.trim()) e.clientName = 'Required';
-    if (!form.projectName.trim()) e.projectName = 'Required';
     if (!form.contactName.trim()) e.contactName = 'Required';
     if (!form.phone.trim()) e.phone = 'Required';
     if (!form.email.trim() || !form.email.includes('@')) e.email = 'Valid email required';
-    if (!form.preferredDate) e.preferredDate = 'Please select a date from calendar';
+    if (selectedDates.length < form.shootDays) e.dates = `Please select ${form.shootDays} date${form.shootDays > 1 ? 's' : ''}`;
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
   const handleSubmit = () => {
     if (!validate()) return;
-    submitBooking({ ...form, shootDays: parseInt(form.shootDays) });
+    submitBooking({
+      clientName: form.clientName,
+      projectName: `${form.clientName} - ${form.shootDays} Day Shoot`,
+      contactName: form.contactName,
+      phone: form.phone,
+      email: form.email,
+      preferredDate: selectedDates[0],
+      selectedDates: selectedDates,
+      shootDays: form.shootDays
+    });
     setSubmitted(true);
   };
+
+  const fmtDate = (d) => new Date(d).toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short' });
 
   if (submitted) {
     return (
       <div className="public-page">
         <div style={{ textAlign:'center', maxWidth:'480px' }}>
-          <div style={{ width:'64px', height:'64px', background:'rgba(100,200,100,0.15)', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 20px' }}>
-            <CheckCircle size={32} color="#6dc76d" />
+          <div style={{ width:'64px', height:'64px', background:'rgba(201,169,110,0.15)', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 20px' }}>
+            <CheckCircle size={32} color="#c9a96e" />
           </div>
           <h1 style={{ fontSize:'24px', fontWeight:'800', marginBottom:'12px' }}>Booking Request Sent!</h1>
           <p style={{ color:'var(--text-muted)', fontSize:'14px', lineHeight:'1.6', marginBottom:'24px' }}>
-            Thanks <strong style={{ color:'var(--text)' }}>{form.contactName}</strong>! Your booking request for <strong style={{ color:'var(--accent)' }}>{form.projectName}</strong> has been received.
+            Thanks <strong style={{ color:'var(--text)' }}>{form.contactName}</strong>! Your booking request has been received.
             Our team will review and confirm within 24 hours.
           </p>
           <div style={{ padding:'16px 20px', background:'var(--surface)', border:'1px solid var(--border)', borderRadius:'12px', marginBottom:'24px', textAlign:'left' }}>
             <div style={{ fontSize:'11px', color:'var(--text-muted)', marginBottom:'8px', fontWeight:'600', textTransform:'uppercase', letterSpacing:'0.06em', fontFamily:'Syne' }}>Booking Summary</div>
             {[
               ['Client', form.clientName],
-              ['Project', form.projectName],
-              ['Date', new Date(form.preferredDate).toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' })],
+              ['Selected Dates', selectedDates.map(fmtDate).join(', ')],
               ['Shoot Days', `${form.shootDays} day${form.shootDays > 1 ? 's' : ''}`],
             ].map(([k,v]) => (
               <div key={k} style={{ display:'flex', justifyContent:'space-between', padding:'6px 0', borderBottom:'1px solid var(--border)', fontSize:'13px' }}>
@@ -92,7 +122,7 @@ export default function PublicBooking() {
               </div>
             ))}
           </div>
-          <button className="btn-secondary" onClick={() => setPublicPage(false)}>← Back to Login</button>
+          <button className="btn-secondary" onClick={() => setPublicPage(false)}>← Back</button>
         </div>
       </div>
     );
@@ -100,20 +130,20 @@ export default function PublicBooking() {
 
   return (
     <div className="public-page">
-      {/* Header */}
-      <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'36px' }}>
-        <div style={{ width:'32px', height:'32px', background:'var(--accent)', borderRadius:'8px', display:'flex', alignItems:'center', justifyContent:'center' }}>
-          <Zap size={15} color="var(--bg)" fill="var(--bg)" />
-        </div>
-        <span style={{ fontFamily:'Syne', fontSize:'18px', fontWeight:'800' }}>Production OS</span>
-        <span style={{ color:'var(--text-muted)', fontSize:'13px', marginLeft:'8px' }}>· Client Booking</span>
+      {/* Header - just "Client Booking" */}
+      <div style={{ marginBottom:'36px', textAlign:'center' }}>
+        <img src="/logo.png" alt="Team Aaram" style={{ width:'140px', objectFit:'contain', marginBottom:'12px' }} />
+        <h1 style={{ fontFamily:'Syne', fontSize:'20px', fontWeight:'800', color:'var(--text)' }}>Client Booking</h1>
+        <p style={{ color:'var(--text-muted)', fontSize:'13px', marginTop:'4px' }}>Select your shoot dates and fill in your details</p>
       </div>
 
-      <div style={{ width:'100%', maxWidth:'900px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'24px', alignItems:'start' }}>
+      <div style={{ width:'100%', maxWidth:'960px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'24px', alignItems:'start' }}>
         {/* Calendar */}
         <div className="card">
-          <h2 style={{ fontSize:'16px', fontWeight:'800', marginBottom:'4px' }}>Pick a Date</h2>
-          <p style={{ fontSize:'12px', color:'var(--text-muted)', marginBottom:'16px' }}>Green dates are available. Grey dates are unavailable.</p>
+          <h2 style={{ fontSize:'15px', fontWeight:'800', marginBottom:'4px' }}>Pick Your Dates</h2>
+          <p style={{ fontSize:'12px', color:'var(--text-muted)', marginBottom:'16px' }}>
+            Select <strong style={{ color:'var(--accent)' }}>{form.shootDays} date{form.shootDays > 1 ? 's' : ''}</strong> — grey dates are unavailable
+          </p>
 
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'14px' }}>
             <button style={{ background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:'8px', width:'30px', height:'30px', cursor:'pointer', color:'var(--text)', display:'flex', alignItems:'center', justifyContent:'center' }}
@@ -131,38 +161,56 @@ export default function PublicBooking() {
               if (!cell.current) return <div key={i} style={{ aspectRatio:'1', borderRadius:'6px' }} />;
               const busy = isBusy(cell.date);
               const available = isAvailable(cell.date);
-              const selected = form.preferredDate === cell.date;
+              const selected = selectedDates.includes(cell.date);
+              const selIndex = selectedDates.indexOf(cell.date);
               return (
-                <div key={i} onClick={() => !busy && setForm(p => ({ ...p, preferredDate: cell.date }))} style={{
+                <div key={i} onClick={() => handleDateClick(cell.date)} style={{
                   aspectRatio:'1', borderRadius:'6px', display:'flex', alignItems:'center', justifyContent:'center',
-                  fontSize:'12px', fontWeight:'500', cursor: busy ? 'not-allowed' : 'pointer',
-                  background: selected ? 'var(--accent)' : available ? 'rgba(100,200,100,0.15)' : busy ? 'rgba(255,60,60,0.06)' : 'var(--surface2)',
-                  color: selected ? 'var(--bg)' : busy ? 'var(--text-dim)' : available ? '#6dc76d' : 'var(--text)',
-                  border: selected ? '1px solid var(--accent)' : available ? '1px solid rgba(100,200,100,0.3)' : '1px solid transparent',
-                  transition:'all 0.1s',
+                  fontSize:'12px', fontWeight:'600', cursor: busy ? 'not-allowed' : 'pointer',
+                  background: selected ? 'var(--accent)' : available ? 'rgba(201,169,110,0.1)' : busy ? 'rgba(255,60,60,0.06)' : 'var(--surface2)',
+                  color: selected ? '#1a1008' : busy ? 'var(--text-dim)' : available ? '#c9a96e' : 'var(--text)',
+                  border: selected ? '2px solid var(--accent)' : available ? '1px solid rgba(201,169,110,0.3)' : '1px solid transparent',
+                  transition:'all 0.1s', position:'relative'
                 }}>
                   {cell.day}
+                  {selected && form.shootDays > 1 && (
+                    <span style={{ position:'absolute', top:'-4px', right:'-4px', width:'14px', height:'14px', background:'#083f3e', borderRadius:'50%', fontSize:'8px', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontWeight:'800' }}>
+                      {selIndex + 1}
+                    </span>
+                  )}
                 </div>
               );
             })}
           </div>
 
-          {form.preferredDate && (
-            <div style={{ marginTop:'12px', padding:'10px 12px', background:'rgba(232,255,71,0.06)', border:'1px solid rgba(232,255,71,0.2)', borderRadius:'8px', fontSize:'12px', color:'var(--accent)' }}>
-              ✓ Selected: {new Date(form.preferredDate).toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long' })}
+          {/* Selected dates display */}
+          {selectedDates.length > 0 && (
+            <div style={{ marginTop:'12px', padding:'10px 12px', background:'rgba(201,169,110,0.06)', border:'1px solid rgba(201,169,110,0.2)', borderRadius:'8px' }}>
+              <div style={{ fontSize:'11px', color:'var(--text-muted)', marginBottom:'6px', fontWeight:'600', textTransform:'uppercase', letterSpacing:'0.06em', fontFamily:'Syne' }}>Selected Dates</div>
+              <div style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                {selectedDates.map((d, i) => (
+                  <div key={d} style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                    <span style={{ fontSize:'12px', color:'var(--accent)', fontWeight:'600' }}>Day {i+1}: {fmtDate(d)}</span>
+                    <button onClick={() => setSelectedDates(p => p.filter(x => x !== d))} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--text-muted)', padding:'2px' }}>
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
-          {errors.preferredDate && <p style={{ color:'#ff6b6b', fontSize:'11px', marginTop:'6px' }}>{errors.preferredDate}</p>}
+          {errors.dates && <p style={{ color:'#ff6b6b', fontSize:'11px', marginTop:'6px' }}>{errors.dates}</p>}
 
-          <div style={{ marginTop:'12px' }}>
+          {/* Shoot days selector */}
+          <div style={{ marginTop:'16px' }}>
             <label className="label">Number of Shoot Days</label>
             <div style={{ display:'flex', gap:'8px' }}>
               {[1,2,3].map(n => (
-                <button key={n} onClick={() => setForm(p => ({ ...p, shootDays: n }))} style={{
+                <button key={n} onClick={() => handleShootDaysChange(n)} style={{
                   flex:1, padding:'10px', borderRadius:'8px', border:'1px solid',
                   background: form.shootDays === n ? 'var(--accent)' : 'var(--surface2)',
                   borderColor: form.shootDays === n ? 'var(--accent)' : 'var(--border)',
-                  color: form.shootDays === n ? 'var(--bg)' : 'var(--text)',
+                  color: form.shootDays === n ? '#1a1008' : 'var(--text)',
                   fontSize:'14px', fontWeight:'700', cursor:'pointer', fontFamily:'Syne'
                 }}>{n}</button>
               ))}
@@ -170,15 +218,14 @@ export default function PublicBooking() {
           </div>
         </div>
 
-        {/* Form */}
+        {/* Form - no project name */}
         <div className="card">
-          <h2 style={{ fontSize:'16px', fontWeight:'800', marginBottom:'4px' }}>Your Details</h2>
-          <p style={{ fontSize:'12px', color:'var(--text-muted)', marginBottom:'20px' }}>Fill in your project information</p>
+          <h2 style={{ fontSize:'15px', fontWeight:'800', marginBottom:'4px' }}>Your Details</h2>
+          <p style={{ fontSize:'12px', color:'var(--text-muted)', marginBottom:'20px' }}>Fill in your information</p>
 
           <div style={{ display:'flex', flexDirection:'column', gap:'14px' }}>
             {[
               { key:'clientName', label:'Company / Brand Name', placeholder:'e.g. PADMA' },
-              { key:'projectName', label:'Project Name', placeholder:'e.g. Summer Collection Reel' },
               { key:'contactName', label:'Your Name', placeholder:'Full name' },
               { key:'phone', label:'Phone Number', placeholder:'+91 98765 43210', type:'tel' },
               { key:'email', label:'Email Address', placeholder:'you@company.com', type:'email' },
@@ -197,13 +244,10 @@ export default function PublicBooking() {
               </div>
             ))}
 
-            <button className="btn-primary" style={{ width:'100%', justifyContent:'center', padding:'12px', fontSize:'14px', marginTop:'6px' }} onClick={handleSubmit}>
+            <button className="btn-primary" style={{ width:'100%', justifyContent:'center', padding:'13px', fontSize:'14px', marginTop:'6px' }} onClick={handleSubmit}>
               Submit Booking Request
             </button>
-
-            <p style={{ fontSize:'11px', color:'var(--text-muted)', textAlign:'center' }}>
-              Our team will confirm within 24 hours
-            </p>
+            <p style={{ fontSize:'11px', color:'var(--text-muted)', textAlign:'center' }}>Our team will confirm within 24 hours</p>
           </div>
         </div>
       </div>
