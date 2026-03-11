@@ -10,9 +10,7 @@ export default function PublicBooking() {
   const [calDate, setCalDate] = useState(new Date());
   const [submitted, setSubmitted] = useState(false);
   const [selectedDates, setSelectedDates] = useState([]);
-  const [form, setForm] = useState({
-    clientName:'', contactName:'', phone:'', email:'', shootDays: 1
-  });
+  const [form, setForm] = useState({ clientName:'', phone:'', shootDays: 1 });
   const [errors, setErrors] = useState({});
 
   const today = new Date();
@@ -50,15 +48,12 @@ export default function PublicBooking() {
 
   const handleDateClick = (date) => {
     if (!date || isBusy(date)) return;
-    const maxDays = form.shootDays;
-
     if (selectedDates.includes(date)) {
       setSelectedDates(p => p.filter(d => d !== date));
     } else {
-      if (selectedDates.length < maxDays) {
+      if (selectedDates.length < form.shootDays) {
         setSelectedDates(p => [...p, date].sort());
       } else {
-        // Replace oldest selection
         setSelectedDates(p => [...p.slice(1), date].sort());
       }
     }
@@ -72,9 +67,7 @@ export default function PublicBooking() {
   const validate = () => {
     const e = {};
     if (!form.clientName.trim()) e.clientName = 'Required';
-    if (!form.contactName.trim()) e.contactName = 'Required';
     if (!form.phone.trim()) e.phone = 'Required';
-    if (!form.email.trim() || !form.email.includes('@')) e.email = 'Valid email required';
     if (selectedDates.length < form.shootDays) e.dates = `Please select ${form.shootDays} date${form.shootDays > 1 ? 's' : ''}`;
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -85,11 +78,11 @@ export default function PublicBooking() {
     submitBooking({
       clientName: form.clientName,
       projectName: `${form.clientName} - ${form.shootDays} Day Shoot`,
-      contactName: form.contactName,
+      contactName: form.clientName,
       phone: form.phone,
-      email: form.email,
+      email: '',
       preferredDate: selectedDates[0],
-      selectedDates: selectedDates,
+      selectedDates,
       shootDays: form.shootDays
     });
     setSubmitted(true);
@@ -106,13 +99,14 @@ export default function PublicBooking() {
           </div>
           <h1 style={{ fontSize:'24px', fontWeight:'800', marginBottom:'12px' }}>Booking Request Sent!</h1>
           <p style={{ color:'var(--text-muted)', fontSize:'14px', lineHeight:'1.6', marginBottom:'24px' }}>
-            Thanks <strong style={{ color:'var(--text)' }}>{form.contactName}</strong>! Your booking request has been received.
-            Our team will review and confirm within 24 hours.
+            Thanks <strong style={{ color:'var(--text)' }}>{form.clientName}</strong>! Your booking request has been received.
+            Our team will confirm within 24 hours.
           </p>
           <div style={{ padding:'16px 20px', background:'var(--surface)', border:'1px solid var(--border)', borderRadius:'12px', marginBottom:'24px', textAlign:'left' }}>
             <div style={{ fontSize:'11px', color:'var(--text-muted)', marginBottom:'8px', fontWeight:'600', textTransform:'uppercase', letterSpacing:'0.06em', fontFamily:'Syne' }}>Booking Summary</div>
             {[
-              ['Client', form.clientName],
+              ['Company', form.clientName],
+              ['Phone', form.phone],
               ['Selected Dates', selectedDates.map(fmtDate).join(', ')],
               ['Shoot Days', `${form.shootDays} day${form.shootDays > 1 ? 's' : ''}`],
             ].map(([k,v]) => (
@@ -130,14 +124,15 @@ export default function PublicBooking() {
 
   return (
     <div className="public-page">
-      {/* Header - just "Client Booking" */}
-      <div style={{ marginBottom:'36px', textAlign:'center' }}>
+      {/* Header — logo centered */}
+      <div style={{ marginBottom:'36px', display:'flex', flexDirection:'column', alignItems:'center' }}>
         <img src="/logo.png" alt="Team Aaram" style={{ width:'140px', objectFit:'contain', marginBottom:'12px' }} />
-        <h1 style={{ fontFamily:"'DM Sans', sans-serif", fontSize:'20px', fontWeight:'800', color:'var(--text)' }}>Client Booking</h1>
+        <h1 style={{ fontFamily:"'DM Sans', sans-serif", fontSize:'22px', fontWeight:'800', color:'var(--text)' }}>Client Booking</h1>
         <p style={{ color:'var(--text-muted)', fontSize:'13px', marginTop:'4px' }}>Select your shoot dates and fill in your details</p>
       </div>
 
       <div style={{ width:'100%', maxWidth:'960px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'24px', alignItems:'start' }}>
+
         {/* Calendar */}
         <div className="card">
           <h2 style={{ fontSize:'15px', fontWeight:'800', marginBottom:'4px' }}>Pick Your Dates</h2>
@@ -201,11 +196,11 @@ export default function PublicBooking() {
           )}
           {errors.dates && <p style={{ color:'#ff6b6b', fontSize:'11px', marginTop:'6px' }}>{errors.dates}</p>}
 
-          {/* Shoot days selector */}
+          {/* Shoot days — only 1 or 2 */}
           <div style={{ marginTop:'16px' }}>
             <label className="label">Number of Shoot Days</label>
             <div style={{ display:'flex', gap:'8px' }}>
-              {[1,2,3].map(n => (
+              {[1, 2].map(n => (
                 <button key={n} onClick={() => handleShootDaysChange(n)} style={{
                   flex:1, padding:'10px', borderRadius:'8px', border:'1px solid',
                   background: form.shootDays === n ? 'var(--accent)' : 'var(--surface2)',
@@ -218,33 +213,29 @@ export default function PublicBooking() {
           </div>
         </div>
 
-        {/* Form - no project name */}
+        {/* Form — company + phone only */}
         <div className="card">
           <h2 style={{ fontSize:'15px', fontWeight:'800', marginBottom:'4px' }}>Your Details</h2>
           <p style={{ fontSize:'12px', color:'var(--text-muted)', marginBottom:'20px' }}>Fill in your information</p>
 
-          <div style={{ display:'flex', flexDirection:'column', gap:'14px' }}>
-            {[
-              { key:'clientName', label:'Company / Brand Name' },
-              { key:'contactName', label:'Your Name' },
-              { key:'phone', label:'Phone Number', type:'tel' },
-              { key:'email', label:'Email Address', type:'email' },
-            ].map(field => (
-              <div key={field.key}>
-                <label className="label">{field.label}</label>
-                <input
-                  className="input"
-                  type={field.type || 'text'}
-                  placeholder=""
-                  value={form[field.key]}
-                  onChange={e => setForm(p => ({ ...p, [field.key]: e.target.value }))}
-                  style={{ borderColor: errors[field.key] ? '#ff6b6b' : undefined }}
-                />
-                {errors[field.key] && <p style={{ color:'#ff6b6b', fontSize:'11px', marginTop:'3px' }}>{errors[field.key]}</p>}
-              </div>
-            ))}
+          <div style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
+            <div>
+              <label className="label">Company / Brand Name</label>
+              <input className="input" type="text" value={form.clientName}
+                onChange={e => setForm(p => ({ ...p, clientName: e.target.value }))}
+                style={{ borderColor: errors.clientName ? '#ff6b6b' : undefined }} />
+              {errors.clientName && <p style={{ color:'#ff6b6b', fontSize:'11px', marginTop:'3px' }}>{errors.clientName}</p>}
+            </div>
 
-            <button className="btn-primary" style={{ width:'100%', justifyContent:'center', padding:'13px', fontSize:'14px', marginTop:'6px' }} onClick={handleSubmit}>
+            <div>
+              <label className="label">Phone Number</label>
+              <input className="input" type="tel" value={form.phone}
+                onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
+                style={{ borderColor: errors.phone ? '#ff6b6b' : undefined }} />
+              {errors.phone && <p style={{ color:'#ff6b6b', fontSize:'11px', marginTop:'3px' }}>{errors.phone}</p>}
+            </div>
+
+            <button className="btn-primary" style={{ width:'100%', justifyContent:'center', padding:'14px', fontSize:'14px', marginTop:'8px' }} onClick={handleSubmit}>
               Submit Booking Request
             </button>
             <p style={{ fontSize:'11px', color:'var(--text-muted)', textAlign:'center' }}>Our team will confirm within 24 hours</p>
