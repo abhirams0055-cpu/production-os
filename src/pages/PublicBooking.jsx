@@ -131,9 +131,9 @@ export default function PublicBooking() {
   return (
     <div className="public-page">
       {/* Header - just "Client Booking" */}
-     <div style={{ marginBottom:'36px', textAlign:'center', display:'flex', flexDirection:'column', alignItems:'center' }}>
+      <div style={{ marginBottom:'36px', textAlign:'center' }}>
         <img src="/logo.png" alt="Team Aaram" style={{ width:'140px', objectFit:'contain', marginBottom:'12px' }} />
-        <h1 style={{ fontFamily:'Syne', fontSize:'20px', fontWeight:'800', color:'var(--text)' }}>Client Booking</h1>
+        <h1 style={{ fontFamily:"'DM Sans', sans-serif", fontSize:'20px', fontWeight:'800', color:'var(--text)' }}>Client Booking</h1>
         <p style={{ color:'var(--text-muted)', fontSize:'13px', marginTop:'4px' }}>Select your shoot dates and fill in your details</p>
       </div>
 
@@ -225,17 +225,17 @@ export default function PublicBooking() {
 
           <div style={{ display:'flex', flexDirection:'column', gap:'14px' }}>
             {[
-              { key:'clientName', label:'Company / Brand Name', placeholder:'e.g. PADMA' },
-              { key:'contactName', label:'Your Name', placeholder:'Full name' },
-              { key:'phone', label:'Phone Number', placeholder:'+91 98765 43210', type:'tel' },
-              { key:'email', label:'Email Address', placeholder:'you@company.com', type:'email' },
+              { key:'clientName', label:'Company / Brand Name' },
+              { key:'contactName', label:'Your Name' },
+              { key:'phone', label:'Phone Number', type:'tel' },
+              { key:'email', label:'Email Address', type:'email' },
             ].map(field => (
               <div key={field.key}>
                 <label className="label">{field.label}</label>
                 <input
                   className="input"
                   type={field.type || 'text'}
-                  placeholder={field.placeholder}
+                  placeholder=""
                   value={form[field.key]}
                   onChange={e => setForm(p => ({ ...p, [field.key]: e.target.value }))}
                   style={{ borderColor: errors[field.key] ? '#ff6b6b' : undefined }}
