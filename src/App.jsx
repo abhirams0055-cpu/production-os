@@ -10,6 +10,7 @@ import TeamPage from './pages/TeamPage';
 import PublicBooking from './pages/PublicBooking';
 import ClientPortal from './pages/ClientPortal';
 import ClientAccountsPage from './pages/ClientAccountsPage';
+import ActivityPage from './pages/ActivityPage';
 
 const pages = {
   dashboard: Dashboard,
@@ -19,6 +20,7 @@ const pages = {
   projects: ProjectsPage,
   team: TeamPage,
   clients: ClientAccountsPage,
+  activity: ActivityPage,
 };
 
 export default function App() {
