@@ -205,7 +205,7 @@ export default function TeamPage() {
             { label:'Done', value:stats.completed, color:'#6dc76d' },
           ].map(s => (
             <div key={s.label} style={{ textAlign:'center', padding:'8px 4px', background:'var(--surface2)', borderRadius:'8px' }}>
-              <div style={{ fontSize:'16px', fontWeight:'800', fontFamily:'Syne', color:s.color }}>{s.value}</div>
+              <div style={{ fontSize:'16px', fontWeight:'800', fontFamily:"'Playfair Display', serif", color:s.color }}>{s.value}</div>
               <div style={{ fontSize:'10px', color:'var(--text-muted)' }}>{s.label}</div>
             </div>
           ))}
