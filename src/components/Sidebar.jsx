@@ -1,7 +1,7 @@
 import { useApp } from '../context/AppContext';
 import {
   LayoutDashboard, Calendar, ClipboardList, CheckSquare,
-  FolderOpen, Users, LogOut, Zap, ExternalLink
+  FolderOpen, Users, LogOut, ExternalLink
 } from 'lucide-react';
 
 const navItems = [
@@ -19,17 +19,16 @@ export default function Sidebar() {
 
   return (
     <div style={{
-      width: '220px', minHeight: '100vh', background: 'var(--surface)',
-      borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column',
+      width: '220px', minHeight: '100vh',
+      background: '#083f3e',
+      borderRight: '1px solid rgba(201,169,110,0.15)',
+      display: 'flex', flexDirection: 'column',
       padding: '20px 14px', flexShrink: 0,
       position: 'sticky', top: 0, height: '100vh', overflowY: 'auto'
     }}>
       {/* Logo */}
       <div style={{ display:'flex', alignItems:'center', gap:'10px', padding:'6px 10px', marginBottom:'28px' }}>
-        <div style={{ width:'30px', height:'30px', background:'var(--accent)', borderRadius:'7px', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-          <Zap size={15} color="var(--bg)" fill="var(--bg)" />
-        </div>
-        <span style={{ fontFamily:'Syne', fontSize:'15px', fontWeight:'800', color:'var(--text)' }}>Production OS</span>
+        <img src="/logo.png" alt="Team Aaram" style={{ width:'120px', objectFit:'contain' }} />
       </div>
 
       {/* Nav */}
@@ -41,16 +40,25 @@ export default function Sidebar() {
           return (
             <button
               key={item.id}
-              className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
               onClick={() => setView(item.id)}
-              style={{ width:'100%', textAlign:'left', position:'relative' }}
+              style={{
+                display:'flex', alignItems:'center', gap:'10px',
+                padding:'10px 14px', borderRadius:'10px', cursor:'pointer',
+                width:'100%', textAlign:'left', border:'1px solid',
+                fontFamily:'DM Sans, sans-serif', fontSize:'13px', fontWeight:'500',
+                transition:'all 0.15s ease', position:'relative',
+                background: isActive ? 'var(--accent)' : 'transparent',
+                borderColor: isActive ? 'var(--accent)' : 'transparent',
+                color: isActive ? '#1a1008' : 'rgba(240,237,232,0.7)',
+              }}
             >
-              <Icon size={16} />
+              <Icon size={16} color={isActive ? '#1a1008' : 'rgba(201,169,110,0.8)'} />
               {item.label}
               {badge && (
                 <span style={{
-                  marginLeft:'auto', background: isActive ? 'var(--bg)' : 'var(--accent)',
-                  color: isActive ? 'var(--accent)' : 'var(--bg)',
+                  marginLeft:'auto',
+                  background: isActive ? '#1a1008' : 'var(--accent)',
+                  color: isActive ? 'var(--accent)' : '#1a1008',
                   borderRadius:'20px', padding:'1px 7px', fontSize:'10px', fontWeight:'700'
                 }}>{badge}</span>
               )}
@@ -60,28 +68,43 @@ export default function Sidebar() {
 
         {/* Public booking link */}
         <button
-          className="sidebar-nav-item"
           onClick={() => setPublicPage(true)}
-          style={{ width:'100%', textAlign:'left', marginTop:'8px', borderStyle:'dashed' }}
+          style={{
+            display:'flex', alignItems:'center', gap:'10px',
+            padding:'10px 14px', borderRadius:'10px', cursor:'pointer',
+            width:'100%', textAlign:'left', border:'1px dashed rgba(201,169,110,0.3)',
+            fontFamily:'DM Sans, sans-serif', fontSize:'13px', fontWeight:'500',
+            background:'transparent', color:'rgba(201,169,110,0.6)',
+            marginTop:'8px', transition:'all 0.15s'
+          }}
         >
-          <ExternalLink size={16} />
+          <ExternalLink size={16} color="rgba(201,169,110,0.6)" />
           Client Booking
         </button>
       </nav>
 
       {/* User info */}
-      <div style={{ borderTop:'1px solid var(--border)', paddingTop:'14px', marginTop:'14px' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:'10px', padding:'8px 10px', borderRadius:'8px', background:'var(--surface2)', marginBottom:'8px' }}>
-          <div style={{ width:'30px', height:'30px', background:'linear-gradient(135deg,var(--accent),#7aadff)', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'12px', fontWeight:'700', color:'var(--bg)', flexShrink:0 }}>
+      <div style={{ borderTop:'1px solid rgba(201,169,110,0.15)', paddingTop:'14px', marginTop:'14px' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:'10px', padding:'8px 10px', borderRadius:'8px', background:'rgba(0,0,0,0.2)', marginBottom:'8px' }}>
+          <div style={{ width:'30px', height:'30px', background:'linear-gradient(135deg,var(--accent),#c9a96e)', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'12px', fontWeight:'700', color:'#1a1008', flexShrink:0 }}>
             {currentUser?.name?.charAt(0)}
           </div>
           <div style={{ overflow:'hidden' }}>
             <div style={{ fontSize:'12px', fontWeight:'600', color:'var(--text)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{currentUser?.name}</div>
-            <div style={{ fontSize:'10px', color:'var(--text-muted)', textTransform:'capitalize' }}>{currentUser?.role}</div>
+            <div style={{ fontSize:'10px', color:'rgba(201,169,110,0.7)', textTransform:'capitalize' }}>{currentUser?.role}</div>
           </div>
         </div>
-        <button className="sidebar-nav-item" onClick={logout} style={{ width:'100%', textAlign:'left', color:'#ff6b6b' }}>
-          <LogOut size={16} color="#ff6b6b" />
+        <button
+          onClick={logout}
+          style={{
+            display:'flex', alignItems:'center', gap:'10px',
+            padding:'10px 14px', borderRadius:'10px', cursor:'pointer',
+            width:'100%', textAlign:'left', border:'1px solid transparent',
+            fontFamily:'DM Sans, sans-serif', fontSize:'13px', fontWeight:'500',
+            background:'transparent', color:'rgba(255,100,100,0.7)', transition:'all 0.15s'
+          }}
+        >
+          <LogOut size={16} color="rgba(255,100,100,0.7)" />
           Sign Out
         </button>
       </div>
