@@ -14,9 +14,9 @@ export default function ClientPortal({ clientUser, onLogout }) {
   const [shootDays, setShootDays] = useState(1);
   const [errors, setErrors] = useState({});
 
-  // Match bookings by clientUser id stored at submit time, or fall back to phone/name
+  // Convert both to string so number vs string from Supabase never causes mismatch
   const myBookings = bookings.filter(b =>
-    b.clientUserId === clientUser.id ||
+    (b.clientUserId != null && String(b.clientUserId) === String(clientUser.id)) ||
     (b.phone === clientUser.phone && b.clientName?.toLowerCase() === clientUser.companyName?.toLowerCase())
   );
 
@@ -35,11 +35,18 @@ export default function ClientPortal({ clientUser, onLogout }) {
 
   const isBusy = (date) => {
     if (!date) return true;
-    if (new Date(date) < today) return true;
+    // Past dates
+    if (new Date(date + 'T12:00:00') < today) return true;
+    // Admin-marked as anything except 'available'
     const mark = dateMarks.find(m => m.date === date);
-    if (mark && (mark.status === 'busy' || mark.status === 'tentative')) return true;
-    // Only block if there's an approved shoot on that date
-    if (shoots.find(s => s.date === date && s.status !== 'rejected')) return true;
+    if (mark && mark.status !== 'available') return true;
+    // Has a confirmed shoot
+    if (shoots.find(s => s.date === date)) return true;
+    // Already has a pending or approved booking
+    if (bookings.find(b =>
+      (b.status === 'pending' || b.status === 'approved') &&
+      b.preferredDate === date
+    )) return true;
     return false;
   };
 
