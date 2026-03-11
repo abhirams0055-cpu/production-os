@@ -36,7 +36,7 @@ export default function PublicBooking() {
     if (dt < today) return true;
     const mark = dateMarks.find(m => m.date === date);
     if (mark && (mark.status === 'busy' || mark.status === 'tentative')) return true;
-    if (shoots.find(s => s.date === date)) return true;
+    if (shoots.find(s => s.date === date && s.status !== 'rejected')) return true;
     return false;
   };
 
