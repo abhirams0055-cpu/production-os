@@ -131,7 +131,7 @@ export default function PublicBooking() {
   return (
     <div className="public-page">
       {/* Header - just "Client Booking" */}
-      <div style={{ marginBottom:'36px', textAlign:'center' }}>
+     <div style={{ marginBottom:'36px', textAlign:'center', display:'flex', flexDirection:'column', alignItems:'center' }}>
         <img src="/logo.png" alt="Team Aaram" style={{ width:'140px', objectFit:'contain', marginBottom:'12px' }} />
         <h1 style={{ fontFamily:'Syne', fontSize:'20px', fontWeight:'800', color:'var(--text)' }}>Client Booking</h1>
         <p style={{ color:'var(--text-muted)', fontSize:'13px', marginTop:'4px' }}>Select your shoot dates and fill in your details</p>
