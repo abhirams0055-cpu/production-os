@@ -85,7 +85,8 @@ function ConfirmModal({ message, onConfirm, onClose }) {
 }
 
 export default function ClientAccountsPage() {
-  const { clientAccounts, addClientAccount, updateClientAccount, deleteClientAccount, bookings } = useApp();
+  const { clientAccounts, addClientAccount, updateClientAccount, deleteClientAccount, bookings, currentUser } = useApp();
+  const isAdmin = currentUser?.role === 'admin';
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState(null);
   const [confirm, setConfirm] = useState(null);
@@ -101,14 +102,14 @@ export default function ClientAccountsPage() {
           <h1 style={{ fontSize:'22px', fontWeight:'800' }}>Client Accounts</h1>
           <p style={{ color:'var(--text-muted)', fontSize:'13px', marginTop:'2px' }}>Manage client login credentials for the booking portal</p>
         </div>
-        <button className="btn-primary" onClick={() => setShowAdd(true)}><Plus size={14}/> Add Client</button>
+        {isAdmin && <button className="btn-primary" onClick={() => setShowAdd(true)}><Plus size={14}/> Add Client</button>}
       </div>
 
       {clientAccounts.length === 0 ? (
         <div className="card" style={{ textAlign:'center', padding:'60px', color:'var(--text-muted)' }}>
           <Building2 size={36} style={{ margin:'0 auto 16px', opacity:0.3 }} />
           <p style={{ marginBottom:'16px' }}>No client accounts yet.</p>
-          <button className="btn-primary" onClick={() => setShowAdd(true)}><Plus size={14}/> Add First Client</button>
+          {isAdmin && <button className="btn-primary" onClick={() => setShowAdd(true)}><Plus size={14}/> Add First Client</button>}
         </div>
       ) : (
         <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
@@ -138,12 +139,14 @@ export default function ClientAccountsPage() {
                   <span style={{ fontSize:'11px', color:'var(--text-muted)', background:'var(--surface2)', padding:'4px 10px', borderRadius:'8px', border:'1px solid var(--border)' }}>
                     {getBookingCount(acc)} booking{getBookingCount(acc) !== 1 ? 's' : ''}
                   </span>
+                  {isAdmin && <>
                   <button onClick={() => setEditing(acc)} style={{ background:'rgba(201,169,110,0.08)', border:'1px solid rgba(201,169,110,0.2)', borderRadius:'6px', width:'30px', height:'30px', cursor:'pointer', color:'var(--accent)', display:'flex', alignItems:'center', justifyContent:'center' }}>
                     <Pencil size={13}/>
                   </button>
                   <button onClick={() => setConfirm({ message:`Delete client account for "${acc.companyName}"?`, onConfirm: () => deleteClientAccount(acc.id) })} style={{ background:'rgba(255,60,60,0.08)', border:'1px solid rgba(255,60,60,0.15)', borderRadius:'6px', width:'30px', height:'30px', cursor:'pointer', color:'#ff6b6b', display:'flex', alignItems:'center', justifyContent:'center' }}>
                     <Trash2 size={13}/>
                   </button>
+                  </>
                 </div>
               </div>
             </div>
