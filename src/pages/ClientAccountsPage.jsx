@@ -87,6 +87,13 @@ function ConfirmModal({ message, onConfirm, onClose }) {
 export default function ClientAccountsPage() {
   const { clientAccounts, addClientAccount, updateClientAccount, deleteClientAccount, bookings, currentUser } = useApp();
   const isAdmin = currentUser?.role === 'admin';
+
+  if (!isAdmin) return (
+    <div style={{ padding:'60px', textAlign:'center', color:'var(--text-muted)' }}>
+      <Building2 size={36} style={{ margin:'0 auto 16px', opacity:0.3 }} />
+      <p style={{ fontSize:'14px' }}>You don't have permission to view this page.</p>
+    </div>
+  );
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState(null);
   const [confirm, setConfirm] = useState(null);
