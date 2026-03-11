@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Plus, X, ChevronRight, FileText, ExternalLink, Users, Calendar, FolderOpen } from 'lucide-react';
+import { Plus, X, ChevronRight, FileText, ExternalLink, Users, Calendar, FolderOpen, Trash2 } from 'lucide-react';
 
 function AddClientModal({ onClose, onAdd }) {
   const [form, setForm] = useState({ name:'', contact:'', phone:'', email:'' });
@@ -68,7 +68,7 @@ function AddProjectModal({ clientId, onClose, onAdd, shoots, team }) {
                   padding:'4px 12px', borderRadius:'20px', border:'1px solid',
                   background: form.team.includes(m.id) ? 'var(--accent)' : 'var(--surface2)',
                   borderColor: form.team.includes(m.id) ? 'var(--accent)' : 'var(--border)',
-                  color: form.team.includes(m.id) ? 'var(--bg)' : 'var(--text)',
+                  color: form.team.includes(m.id) ? '#1a1008' : 'var(--text)',
                   fontSize:'11px', cursor:'pointer'
                 }}>{m.name.split(' ')[0]}</button>
               ))}
@@ -84,19 +84,50 @@ function AddProjectModal({ clientId, onClose, onAdd, shoots, team }) {
   );
 }
 
+function ConfirmModal({ message, onConfirm, onClose }) {
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e=>e.stopPropagation()} style={{ maxWidth:'380px' }}>
+        <h2 style={{ fontSize:'16px', fontWeight:'800', marginBottom:'12px' }}>Confirm Delete</h2>
+        <p style={{ color:'var(--text-muted)', fontSize:'13px', marginBottom:'24px' }}>{message}</p>
+        <div style={{ display:'flex', gap:'10px', justifyContent:'flex-end' }}>
+          <button className="btn-secondary" onClick={onClose}>Cancel</button>
+          <button className="btn-danger" onClick={() => { onConfirm(); onClose(); }}>
+            <Trash2 size={13} /> Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ProjectsPage() {
-  const { clients, addClient, addProject, shoots, team, currentUser } = useApp();
+  const { clients, addClient, addProject, deleteClient, deleteProject, shoots, team, currentUser } = useApp();
   const isAdmin = currentUser?.role === 'admin';
   const [showAddClient, setShowAddClient] = useState(false);
   const [addProjectFor, setAddProjectFor] = useState(null);
-  const [expanded, setExpanded] = useState(clients.map(c=>c.id));
+  const [expanded, setExpanded] = useState([]);
+  const [confirm, setConfirm] = useState(null); // { message, onConfirm }
 
   const toggle = id => setExpanded(p => p.includes(id) ? p.filter(i=>i!==id) : [...p,id]);
 
   const statusColor = { active:'#6dc76d', planned:'#7aadff', completed:'var(--text-muted)', 'on-hold':'#ffa500' };
-
   const getMemberName = id => team.find(t=>t.id===id)?.name?.split(' ')[0] || '?';
   const getShoot = id => shoots.find(s=>s.id===id);
+
+  const handleDeleteClient = (client) => {
+    setConfirm({
+      message: `Delete client "${client.name}" and all their projects? This cannot be undone.`,
+      onConfirm: () => deleteClient(client.id)
+    });
+  };
+
+  const handleDeleteProject = (clientId, proj) => {
+    setConfirm({
+      message: `Delete project "${proj.name}"? This cannot be undone.`,
+      onConfirm: () => deleteProject(clientId, proj.id)
+    });
+  };
 
   return (
     <div style={{ padding:'28px', maxWidth:'1000px' }}>
@@ -126,10 +157,9 @@ export default function ProjectsPage() {
         {clients.map(client => (
           <div key={client.id} className="card" style={{ padding:0, overflow:'hidden' }}>
             {/* Client header */}
-            <div style={{ padding:'18px 20px', display:'flex', justifyContent:'space-between', alignItems:'center', cursor:'pointer', background:'var(--surface)' }}
-              onClick={() => toggle(client.id)}>
-              <div style={{ display:'flex', alignItems:'center', gap:'14px' }}>
-                <div style={{ width:'38px', height:'38px', background:'linear-gradient(135deg, var(--accent), #7aadff)', borderRadius:'10px', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Syne', fontWeight:'800', fontSize:'16px', color:'var(--bg)' }}>
+            <div style={{ padding:'18px 20px', display:'flex', justifyContent:'space-between', alignItems:'center', background:'var(--surface)' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:'14px', cursor:'pointer', flex:1 }} onClick={() => toggle(client.id)}>
+                <div style={{ width:'38px', height:'38px', background:'linear-gradient(135deg, var(--accent), #083f3e)', borderRadius:'10px', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Syne', fontWeight:'800', fontSize:'16px', color:'#f0ede8', flexShrink:0 }}>
                   {client.name.charAt(0)}
                 </div>
                 <div>
@@ -140,9 +170,20 @@ export default function ProjectsPage() {
                   </div>
                 </div>
               </div>
-              <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
                 <span style={{ fontSize:'12px', color:'var(--text-muted)', fontWeight:'600' }}>{client.projects.length} project{client.projects.length!==1?'s':''}</span>
-                <ChevronRight size={16} color="var(--text-muted)" style={{ transform: expanded.includes(client.id) ? 'rotate(90deg)' : 'none', transition:'transform 0.2s' }} />
+                {isAdmin && (
+                  <button onClick={e => { e.stopPropagation(); handleDeleteClient(client); }} style={{
+                    background:'rgba(255,60,60,0.08)', border:'1px solid rgba(255,60,60,0.15)',
+                    borderRadius:'6px', padding:'5px 8px', cursor:'pointer', color:'#ff6b6b',
+                    display:'flex', alignItems:'center', gap:'4px', fontSize:'11px', transition:'all 0.15s'
+                  }}
+                  onMouseOver={e=>e.currentTarget.style.background='rgba(255,60,60,0.18)'}
+                  onMouseOut={e=>e.currentTarget.style.background='rgba(255,60,60,0.08)'}>
+                    <Trash2 size={12} /> Delete Client
+                  </button>
+                )}
+                <ChevronRight size={16} color="var(--text-muted)" style={{ transform: expanded.includes(client.id) ? 'rotate(90deg)' : 'none', transition:'transform 0.2s', cursor:'pointer' }} onClick={() => toggle(client.id)} />
               </div>
             </div>
 
@@ -163,10 +204,22 @@ export default function ProjectsPage() {
                     {client.projects.map(proj => {
                       const shoot = proj.shootId ? getShoot(proj.shootId) : null;
                       return (
-                        <div key={proj.id} style={{ padding:'14px', background:'var(--surface)', borderRadius:'10px', border:'1px solid var(--border)' }}>
-                          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'8px' }}>
-                            <h4 style={{ fontSize:'13px', fontWeight:'600', color:'var(--text)' }}>{proj.name}</h4>
-                            <span style={{ fontSize:'10px', fontWeight:'600', padding:'2px 8px', borderRadius:'20px', background:`${statusColor[proj.status]}20`, color:statusColor[proj.status], textTransform:'capitalize', fontFamily:'Syne' }}>{proj.status}</span>
+                        <div key={proj.id} style={{ padding:'14px', background:'var(--surface)', borderRadius:'10px', border:'1px solid var(--border)', position:'relative' }}>
+                          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'8px' }}>
+                            <h4 style={{ fontSize:'13px', fontWeight:'600', color:'var(--text)', flex:1, marginRight:'8px' }}>{proj.name}</h4>
+                            <div style={{ display:'flex', gap:'6px', alignItems:'center', flexShrink:0 }}>
+                              <span style={{ fontSize:'10px', fontWeight:'600', padding:'2px 8px', borderRadius:'20px', background:`${statusColor[proj.status]}20`, color:statusColor[proj.status], textTransform:'capitalize', fontFamily:'Syne' }}>{proj.status}</span>
+                              {isAdmin && (
+                                <button onClick={() => handleDeleteProject(client.id, proj)} style={{
+                                  background:'none', border:'none', cursor:'pointer', color:'rgba(255,100,100,0.5)',
+                                  padding:'2px', display:'flex', alignItems:'center', transition:'color 0.15s'
+                                }}
+                                onMouseOver={e=>e.currentTarget.style.color='#ff6b6b'}
+                                onMouseOut={e=>e.currentTarget.style.color='rgba(255,100,100,0.5)'}>
+                                  <Trash2 size={13} />
+                                </button>
+                              )}
+                            </div>
                           </div>
 
                           {shoot && (
@@ -210,6 +263,7 @@ export default function ProjectsPage() {
 
       {showAddClient && <AddClientModal onClose={() => setShowAddClient(false)} onAdd={addClient} />}
       {addProjectFor && <AddProjectModal clientId={addProjectFor} onClose={() => setAddProjectFor(null)} onAdd={addProject} shoots={shoots} team={team} />}
+      {confirm && <ConfirmModal message={confirm.message} onConfirm={confirm.onConfirm} onClose={() => setConfirm(null)} />}
     </div>
   );
 }
