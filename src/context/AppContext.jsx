@@ -31,7 +31,7 @@ export function AppProvider({ children }) {
   const [tasks, setTasks] = useState([]);
   const [clients, setClients] = useState([]);
   const [bookings, setBookings] = useState([]);
-  const team = TEAM;
+  const [team, setTeam] = useState(TEAM);
 
   const loadData = async () => {
     setLoading(true);
@@ -241,6 +241,25 @@ export function AppProvider({ children }) {
     setBookings(p => p.map(b => b.id === id ? { ...b, status: 'rejected' } : b));
   };
 
+  const addMember = (member) => {
+    const newId = Math.max(...team.map(m => m.id), 0) + 1;
+    const newMember = { ...member, id: newId };
+    setTeam(p => [...p, newMember]);
+  };
+
+  const updateMember = (id, member) => {
+    setTeam(p => p.map(m => m.id === id ? { ...m, ...member } : m));
+    // If editing self, update currentUser too
+    if (id === JSON.parse(localStorage.getItem('aaram_user') || '{}')?.id) {
+      const updated = { ...JSON.parse(localStorage.getItem('aaram_user')), ...member };
+      localStorage.setItem('aaram_user', JSON.stringify(updated));
+    }
+  };
+
+  const deleteMember = (id) => {
+    setTeam(p => p.filter(m => m.id !== id));
+  };
+
   const today = new Date();
   const notifications = [
     ...bookings.filter(b => b.status === 'pending').map(b => ({
@@ -264,7 +283,7 @@ export function AppProvider({ children }) {
       tasks, addTask, updateTask, deleteTask,
       clients, addClient, addProject, updateProject, deleteClient, deleteProject,
       bookings, submitBooking, approveBooking, rejectBooking,
-      team, notifications
+      team, addMember, updateMember, deleteMember, notifications
     }}>
       {children}
     </AppContext.Provider>
