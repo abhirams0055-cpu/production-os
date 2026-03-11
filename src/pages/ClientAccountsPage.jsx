@@ -146,14 +146,14 @@ export default function ClientAccountsPage() {
                   <span style={{ fontSize:'11px', color:'var(--text-muted)', background:'var(--surface2)', padding:'4px 10px', borderRadius:'8px', border:'1px solid var(--border)' }}>
                     {getBookingCount(acc)} booking{getBookingCount(acc) !== 1 ? 's' : ''}
                   </span>
-                  {isAdmin && <>
+                  {isAdmin && <div style={{ display:'contents' }}>
                   <button onClick={() => setEditing(acc)} style={{ background:'rgba(201,169,110,0.08)', border:'1px solid rgba(201,169,110,0.2)', borderRadius:'6px', width:'30px', height:'30px', cursor:'pointer', color:'var(--accent)', display:'flex', alignItems:'center', justifyContent:'center' }}>
                     <Pencil size={13}/>
                   </button>
                   <button onClick={() => setConfirm({ message:`Delete client account for "${acc.companyName}"?`, onConfirm: () => deleteClientAccount(acc.id) })} style={{ background:'rgba(255,60,60,0.08)', border:'1px solid rgba(255,60,60,0.15)', borderRadius:'6px', width:'30px', height:'30px', cursor:'pointer', color:'#ff6b6b', display:'flex', alignItems:'center', justifyContent:'center' }}>
                     <Trash2 size={13}/>
                   </button>
-                  </>
+                  </div>}
                 </div>
               </div>
             </div>
