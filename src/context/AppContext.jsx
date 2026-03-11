@@ -32,24 +32,18 @@ export function AppProvider({ children }) {
   const [clients, setClients] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [team, setTeam] = useState(TEAM);
-  const [activityLog, setActivityLog] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('aaram_activity') || '[]'); } catch { return []; }
-  });
+  const [activityLog, setActivityLog] = useState([]);
 
-  const logActivity = (action, message, user) => {
-    const who = user || null;
-    if (!who) return;
-    const entry = { id: Date.now() + Math.random(), action, message, userId: who.id, userName: who.name, ts: new Date().toISOString() };
-    setActivityLog(prev => {
-      const updated = [entry, ...prev].slice(0, 500); // keep last 500
-      localStorage.setItem('aaram_activity', JSON.stringify(updated));
-      return updated;
-    });
+  const logActivity = async (action, message, user) => {
+    if (!user) return;
+    const entry = { action, message, user_id: String(user.id), user_name: user.name, ts: new Date().toISOString() };
+    const { data } = await supabase.from('activity_log').insert([entry]).select().single();
+    if (data) setActivityLog(prev => [{ id: data.id, action: data.action, message: data.message, userId: data.user_id, userName: data.user_name, ts: data.ts }, ...prev].slice(0, 500));
   };
 
-  const clearActivityLog = () => {
+  const clearActivityLog = async () => {
+    await supabase.from('activity_log').delete().neq('id', 0);
     setActivityLog([]);
-    localStorage.removeItem('aaram_activity');
   };
   const [clientAccounts, setClientAccounts] = useState(() => {
     const saved = localStorage.getItem('aaram_client_accounts');
@@ -63,13 +57,14 @@ export function AppProvider({ children }) {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [shootsRes, dateMarksRes, tasksRes, clientsRes, bookingsRes, projectsRes] = await Promise.all([
+      const [shootsRes, dateMarksRes, tasksRes, clientsRes, bookingsRes, projectsRes, activityRes] = await Promise.all([
         supabase.from('shoots').select('*').order('date'),
         supabase.from('date_marks').select('*'),
         supabase.from('tasks').select('*').order('created_at'),
         supabase.from('clients').select('*').order('created_at'),
         supabase.from('bookings').select('*').order('submitted_at', { ascending: false }),
         supabase.from('projects').select('*').order('created_at'),
+        supabase.from('activity_log').select('*').order('ts', { ascending: false }).limit(500),
       ]);
 
       if (shootsRes.data) setShoots(shootsRes.data.map(s => ({
@@ -104,6 +99,11 @@ export function AppProvider({ children }) {
         contactName: b.contact_name, phone: b.phone, email: b.email,
         preferredDate: b.preferred_date, shootDays: b.shoot_days,
         status: b.status, submittedAt: b.submitted_at, notes: b.notes || '', clientUserId: b.client_user_id || null
+      })));
+
+      if (activityRes.data) setActivityLog(activityRes.data.map(a => ({
+        id: a.id, action: a.action, message: a.message,
+        userId: a.user_id, userName: a.user_name, ts: a.ts
       })));
     } catch (err) {
       console.error('Error loading data:', err);
