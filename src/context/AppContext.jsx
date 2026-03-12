@@ -67,7 +67,7 @@ export function AppProvider({ children }) {
       if (bookingsRes.data) setBookings(bookingsRes.data.map(b => ({ id: b.id, clientName: b.client_name, projectName: b.project_name, contactName: b.contact_name, phone: b.phone, email: b.email, preferredDate: b.preferred_date, shootDays: b.shoot_days, status: b.status, submittedAt: b.submitted_at, notes: b.notes || '', clientUserId: b.client_user_id || null })));
       if (activityRes.data) setActivityLog(activityRes.data.map(a => ({ id: a.id, action: a.action, message: a.message, userId: a.user_id, userName: a.user_name, ts: a.ts })));
       if (teamRes.data) setTeam(teamRes.data.map(m => ({ id: m.id, name: m.name, role: m.role, email: m.email, password: m.password, title: m.title })));
-      if (clientAccRes.data) setClientAccounts(clientAccRes.data.map(c => ({ id: c.id, companyName: c.company_name, email: c.email, phone: c.phone, password: c.password })));
+      if (clientAccRes.data) setClientAccounts(clientAccRes.data.map(c => ({ id: c.id, companyName: c.company_name, name: c.contact_name || '', email: c.email, phone: c.phone, password: c.password })));
     } catch (err) { console.error('loadData error:', err); }
     setLoading(false);
   };
@@ -141,7 +141,7 @@ export function AppProvider({ children }) {
     const clientAccSub = supabase.channel('clientacc-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'client_accounts' }, () => {
         supabase.from('client_accounts').select('*').order('id').then(({ data }) => {
-          if (data) setClientAccounts(data.map(c => ({ id: c.id, companyName: c.company_name, email: c.email, phone: c.phone, password: c.password })));
+          if (data) setClientAccounts(data.map(c => ({ id: c.id, companyName: c.company_name, name: c.contact_name || '', email: c.email, phone: c.phone, password: c.password })));
         });
       }).subscribe();
 
@@ -298,16 +298,16 @@ export function AppProvider({ children }) {
   // Client Accounts — Supabase
   const clientLogin = async (emailOrPhone, password) => {
     const { data } = await supabase.from('client_accounts').select('*').or(`email.eq.${emailOrPhone},phone.eq.${emailOrPhone}`).eq('password', password).single();
-    if (data) { const acc = { id: data.id, companyName: data.company_name, email: data.email, phone: data.phone, password: data.password }; setClientUser(acc); localStorage.setItem('aaram_client_user', JSON.stringify(acc)); loadData(); return true; }
+    if (data) { const acc = { id: data.id, companyName: data.company_name, name: data.contact_name || '', email: data.email, phone: data.phone, password: data.password }; setClientUser(acc); localStorage.setItem('aaram_client_user', JSON.stringify(acc)); loadData(); return true; }
     return false;
   };
   const clientLogout = () => { setClientUser(null); localStorage.removeItem('aaram_client_user'); };
   const addClientAccount = async (account) => {
-    const { data } = await supabase.from('client_accounts').insert([{ company_name: account.companyName, email: account.email, phone: account.phone, password: account.password }]).select().single();
-    if (data) setClientAccounts(p => [...p, { id: data.id, companyName: data.company_name, email: data.email, phone: data.phone, password: data.password }]);
+    const { data } = await supabase.from('client_accounts').insert([{ company_name: account.companyName, contact_name: account.name || '', email: account.email, phone: account.phone, password: account.password }]).select().single();
+    if (data) setClientAccounts(p => [...p, { id: data.id, companyName: data.company_name, name: data.contact_name || '', email: data.email, phone: data.phone, password: data.password }]);
   };
   const updateClientAccount = async (id, account) => {
-    await supabase.from('client_accounts').update({ company_name: account.companyName, email: account.email, phone: account.phone, password: account.password }).eq('id', id);
+    await supabase.from('client_accounts').update({ company_name: account.companyName, contact_name: account.name || '', email: account.email, phone: account.phone, password: account.password }).eq('id', id);
     setClientAccounts(p => p.map(a => a.id === id ? { ...a, ...account } : a));
     if (clientUser?.id === id) { const updated = { ...clientUser, ...account }; setClientUser(updated); localStorage.setItem('aaram_client_user', JSON.stringify(updated)); }
   };
