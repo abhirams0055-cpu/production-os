@@ -1,7 +1,7 @@
 import { useApp } from '../context/AppContext';
 import {
   LayoutDashboard, Calendar, ClipboardList, CheckSquare,
-  FolderOpen, Users, LogOut, ExternalLink, Menu, X, Building2, Activity
+  FolderOpen, Users, LogOut, ExternalLink, Menu, X, Building2, Activity, MessageSquare
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -13,6 +13,7 @@ const navItems = [
   { id: 'projects', label: 'Projects', icon: FolderOpen },
   { id: 'clients', label: 'Clients', icon: Building2, adminOnly: true },
   { id: 'team', label: 'Team', icon: Users },
+  { id: 'chat', label: 'Chat', icon: MessageSquare },
   { id: 'activity', label: 'Activity', icon: Activity, adminOnly: true },
 ];
 
