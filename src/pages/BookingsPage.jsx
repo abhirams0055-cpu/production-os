@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Check, X, Clock, Calendar, Phone, Mail, User, Trash2, Pencil, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
+import ChatPanel from '../components/ChatPanel';
 
 function ConfirmModal({ message, onConfirm, onClose }) {
   return (
@@ -93,6 +94,7 @@ export default function BookingsPage() {
   const [expandedNotes, setExpandedNotes] = useState({});
   const [savingNote, setSavingNote] = useState({});
   const [noteText, setNoteText] = useState({});
+  const [openChat, setOpenChat] = useState(null);
 
   const filtered = bookings.filter(b => filter === 'all' ? true : b.status === filter);
   const fmt = d => new Date(d).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
@@ -245,6 +247,19 @@ export default function BookingsPage() {
                   ✗ Booking rejected.
                 </div>
               )}
+
+              {/* Inline chat */}
+              <div style={{ marginTop:'12px', borderTop:'1px solid var(--border)', paddingTop:'10px' }}>
+                <button onClick={() => setOpenChat(openChat === b.id ? null : b.id)}
+                  style={{ background:'none', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:'6px', color: openChat === b.id ? 'var(--accent)' : 'var(--text-muted)', fontSize:'12px', fontFamily:'DM Sans', padding:'4px 0' }}>
+                  <MessageSquare size={13}/> {openChat === b.id ? 'Hide Chat' : 'Chat about this booking'}
+                </button>
+                {openChat === b.id && (
+                  <div style={{ marginTop:'10px', background:'var(--surface2)', borderRadius:'10px', border:'1px solid var(--border)', overflow:'hidden', maxHeight:'360px', display:'flex', flexDirection:'column' }}>
+                    <ChatPanel roomType="booking" roomId={String(b.id)} roomLabel={`${b.clientName} — ${fmt(b.preferredDate)}`} currentUser={currentUser} />
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
