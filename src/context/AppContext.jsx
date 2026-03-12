@@ -299,14 +299,22 @@ export function AppProvider({ children }) {
 
   // Client Accounts — Supabase
   const clientLogin = async (emailOrPhone, password) => {
-    // Try email first, then phone
-    let { data } = await supabase.from('client_accounts').select('*').eq('email', emailOrPhone).eq('password', password).maybeSingle();
-    if (!data) {
-      const res = await supabase.from('client_accounts').select('*').eq('phone', emailOrPhone).eq('password', password).maybeSingle();
-      data = res.data;
-    }
-    if (data) {
-      const acc = { id: data.id, companyName: data.company_name, name: data.contact_name || '', email: data.email, phone: data.phone, password: data.password };
+    const trimmedInput = emailOrPhone.trim();
+    const trimmedPass = password.trim();
+
+    // First fetch all accounts matching the email/phone, then check password in JS
+    // This avoids any query-encoding issues with special chars in passwords
+    let { data: rows, error } = await supabase
+      .from('client_accounts')
+      .select('*')
+      .or(`email.eq.${trimmedInput},phone.eq.${trimmedInput}`);
+
+    if (error) console.error('clientLogin query error:', error);
+
+    const match = (rows || []).find(r => r.password === trimmedPass || r.password === password);
+
+    if (match) {
+      const acc = { id: match.id, companyName: match.company_name, name: match.contact_name || '', email: match.email, phone: match.phone, password: match.password };
       setClientUser(acc);
       localStorage.setItem('aaram_client_user', JSON.stringify(acc));
       loadData();
