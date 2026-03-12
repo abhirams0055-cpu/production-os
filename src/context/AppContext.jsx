@@ -448,6 +448,8 @@ export function AppProvider({ children }) {
     setUnreadMessages(prev => { const n = {...prev}; delete n[roomId]; return n; });
   };
   const totalUnread = Object.values(unreadMessages).reduce((a, b) => a + b, 0);
+
+  const today = new Date();
   const notifications = [
     ...bookings.filter(b => b.status === 'pending').map(b => ({
       id: `bk-${b.id}`, type: 'booking', message: `New booking from ${b.clientName} — ${b.projectName}`, time: b.submittedAt
