@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { X, CheckCircle, ChevronLeft, ChevronRight, Clock, Calendar, LogOut } from 'lucide-react';
+import { X, CheckCircle, ChevronLeft, ChevronRight, Clock, Calendar, LogOut, MessageSquare } from 'lucide-react';
+import ChatPanel from '../components/ChatPanel';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -114,7 +115,7 @@ export default function ClientPortal({ clientUser, onLogout }) {
 
       {/* Tabs */}
       <div style={{ borderBottom:'1px solid var(--border)', padding:'0 24px', display:'flex', gap:'0' }}>
-        {[['book','Book a Shoot'],['history','My Bookings']].map(([id, label]) => (
+        {[['book','Book a Shoot'],['history','My Bookings'],['chat','Chat with Team']].map(([id, label]) => (
           <button key={id} onClick={() => { setTab(id); setSubmitted(false); }} style={{
             padding:'14px 20px', background:'none', border:'none', cursor:'pointer',
             fontSize:'13px', fontWeight:'600', fontFamily:'DM Sans',
@@ -289,6 +290,21 @@ export default function ClientPortal({ clientUser, onLogout }) {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* CHAT TAB */}
+        {tab === 'chat' && (
+          <div style={{ maxWidth:'700px' }}>
+            <h2 style={{ fontSize:'18px', fontWeight:'800', marginBottom:'20px' }}>Chat with Team Aaram</h2>
+            <div className="card" style={{ padding:0, overflow:'hidden', height:'500px', display:'flex', flexDirection:'column' }}>
+              <ChatPanel
+                roomType="direct"
+                roomId={`direct_client_${clientUser.id}`}
+                roomLabel="Team Aaram"
+                clientUser={clientUser}
+              />
+            </div>
           </div>
         )}
       </div>
