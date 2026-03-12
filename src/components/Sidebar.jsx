@@ -18,14 +18,16 @@ const navItems = [
 ];
 
 export default function Sidebar() {
-  const { view, setView, currentUser, logout, notifications, setPublicPage } = useApp();
+  const { view, setView, currentUser, logout, notifications, setPublicPage, totalUnread } = useApp();
   const pendingCount = notifications.filter(n => n.type === 'booking').length;
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const NavItem = ({ item, onClick }) => {
     const Icon = item.icon;
     const isActive = view === item.id;
-    const badge = item.id === 'bookings' && pendingCount > 0 ? pendingCount : null;
+    const badge = item.id === 'bookings' && pendingCount > 0 ? pendingCount
+                : item.id === 'chat' && totalUnread > 0 ? totalUnread
+                : null;
     return (
       <button
         onClick={() => { setView(item.id); onClick?.(); }}
