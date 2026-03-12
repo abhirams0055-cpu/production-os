@@ -155,7 +155,7 @@ export function AppProvider({ children }) {
   }, [currentUser, clientUser]);
 
   const login = async (email, password) => {
-    const { data } = await supabase.from('team_members').select('*').eq('email', email).eq('password', password).single();
+    const { data } = await supabase.from('team_members').select('*').eq('email', email).eq('password', password).maybeSingle();
     if (data) {
       const user = { id: data.id, name: data.name, role: data.role, email: data.email, title: data.title };
       setCurrentUser(user);
@@ -282,7 +282,9 @@ export function AppProvider({ children }) {
     if (data) { setTeam(p => [...p, { id: data.id, name: data.name, role: data.role, email: data.email, password: data.password, title: data.title }]); logActivity('member_added', `added team member "${member.name}" (${member.title})`, currentUser); playMemberSound(); }
   };
   const updateMember = async (id, member) => {
-    await supabase.from('team_members').update({ name: member.name, role: member.role, email: member.email, password: member.password, title: member.title }).eq('id', id);
+    const updates = { name: member.name, role: member.role, email: member.email, title: member.title };
+    if (member.password && member.password.trim()) updates.password = member.password.trim();
+    await supabase.from('team_members').update(updates).eq('id', id);
     setTeam(p => p.map(m => m.id === id ? { ...m, ...member } : m));
     const savedUser = JSON.parse(localStorage.getItem('aaram_user') || '{}');
     if (savedUser?.id === id) { const updated = { ...savedUser, ...member }; setCurrentUser(updated); localStorage.setItem('aaram_user', JSON.stringify(updated)); }
@@ -297,8 +299,19 @@ export function AppProvider({ children }) {
 
   // Client Accounts — Supabase
   const clientLogin = async (emailOrPhone, password) => {
-    const { data } = await supabase.from('client_accounts').select('*').or(`email.eq.${emailOrPhone},phone.eq.${emailOrPhone}`).eq('password', password).single();
-    if (data) { const acc = { id: data.id, companyName: data.company_name, name: data.contact_name || '', email: data.email, phone: data.phone, password: data.password }; setClientUser(acc); localStorage.setItem('aaram_client_user', JSON.stringify(acc)); loadData(); return true; }
+    // Try email first, then phone
+    let { data } = await supabase.from('client_accounts').select('*').eq('email', emailOrPhone).eq('password', password).maybeSingle();
+    if (!data) {
+      const res = await supabase.from('client_accounts').select('*').eq('phone', emailOrPhone).eq('password', password).maybeSingle();
+      data = res.data;
+    }
+    if (data) {
+      const acc = { id: data.id, companyName: data.company_name, name: data.contact_name || '', email: data.email, phone: data.phone, password: data.password };
+      setClientUser(acc);
+      localStorage.setItem('aaram_client_user', JSON.stringify(acc));
+      loadData();
+      return true;
+    }
     return false;
   };
   const clientLogout = () => { setClientUser(null); localStorage.removeItem('aaram_client_user'); };
@@ -307,7 +320,9 @@ export function AppProvider({ children }) {
     if (data) setClientAccounts(p => [...p, { id: data.id, companyName: data.company_name, name: data.contact_name || '', email: data.email, phone: data.phone, password: data.password }]);
   };
   const updateClientAccount = async (id, account) => {
-    await supabase.from('client_accounts').update({ company_name: account.companyName, contact_name: account.name || '', email: account.email, phone: account.phone, password: account.password }).eq('id', id);
+    const updates = { company_name: account.companyName, contact_name: account.name || '', email: account.email, phone: account.phone };
+    if (account.password && account.password.trim()) updates.password = account.password.trim();
+    await supabase.from('client_accounts').update(updates).eq('id', id);
     setClientAccounts(p => p.map(a => a.id === id ? { ...a, ...account } : a));
     if (clientUser?.id === id) { const updated = { ...clientUser, ...account }; setClientUser(updated); localStorage.setItem('aaram_client_user', JSON.stringify(updated)); }
   };
