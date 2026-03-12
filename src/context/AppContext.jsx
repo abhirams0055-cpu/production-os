@@ -111,6 +111,9 @@ export function AppProvider({ children }) {
     setLoading(false);
   };
 
+  const [unreadMessages, setUnreadMessages] = useState({}); // roomId -> count
+  const [currentChatRoom, setCurrentChatRoom] = useState(null); // track open room to avoid false unreads
+
   useEffect(() => {
     if (!currentUser && !clientUser) return;
     loadData();
@@ -142,9 +145,26 @@ export function AppProvider({ children }) {
       })
       .subscribe();
 
+    // Real-time: all messages globally (for unread badges)
+    const sender = currentUser || clientUser;
+    const messagesSub = supabase
+      .channel('messages-global')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+        const m = payload.new;
+        // Don't count own messages or messages in currently open room
+        if (String(m.sender_id) === String(sender?.id)) return;
+        setUnreadMessages(prev => {
+          const roomKey = m.room_id;
+          if (currentChatRoom === roomKey) return prev; // already viewing this room
+          return { ...prev, [roomKey]: (prev[roomKey] || 0) + 1 };
+        });
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(bookingsSub);
       supabase.removeChannel(activitySub);
+      supabase.removeChannel(messagesSub);
     };
   }, [currentUser, clientUser]);
 
@@ -423,7 +443,10 @@ export function AppProvider({ children }) {
     logActivity('member_deleted', `removed team member "${member?.name || id}"`, currentUser);
   };
 
-  const today = new Date();
+  const clearUnread = (roomId) => {
+    setUnreadMessages(prev => { const n = {...prev}; delete n[roomId]; return n; });
+  };
+  const totalUnread = Object.values(unreadMessages).reduce((a, b) => a + b, 0);
   const notifications = [
     ...bookings.filter(b => b.status === 'pending').map(b => ({
       id: `bk-${b.id}`, type: 'booking', message: `New booking from ${b.clientName} — ${b.projectName}`, time: b.submittedAt
@@ -449,7 +472,8 @@ export function AppProvider({ children }) {
       team, addMember, updateMember, deleteMember,
       activityLog, clearActivityLog,
       clientAccounts, clientUser, clientLogin, clientLogout, addClientAccount, updateClientAccount, deleteClientAccount,
-      notifications
+      notifications,
+      unreadMessages, clearUnread, totalUnread, setCurrentChatRoom,
     }}>
       {children}
     </AppContext.Provider>
