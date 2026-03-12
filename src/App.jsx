@@ -11,6 +11,7 @@ import PublicBooking from './pages/PublicBooking';
 import ClientPortal from './pages/ClientPortal';
 import ClientAccountsPage from './pages/ClientAccountsPage';
 import ActivityPage from './pages/ActivityPage';
+import ChatPage from './pages/ChatPage';
 
 const pages = {
   dashboard: Dashboard,
@@ -21,6 +22,7 @@ const pages = {
   team: TeamPage,
   clients: ClientAccountsPage,
   activity: ActivityPage,
+  chat: ChatPage,
 };
 
 export default function App() {
