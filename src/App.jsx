@@ -1,4 +1,6 @@
 import { useApp } from './context/AppContext';
+import { useEffect } from 'react';
+import { unlockAudio } from './utils/sounds';
 import Login from './components/Login';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
@@ -27,6 +29,12 @@ const pages = {
 
 export default function App() {
   const { currentUser, view, publicPage, clientUser, clientLogout } = useApp();
+
+  useEffect(() => {
+    const unlock = () => { unlockAudio(); window.removeEventListener('click', unlock); };
+    window.addEventListener('click', unlock);
+    return () => window.removeEventListener('click', unlock);
+  }, []);
 
   // Client portal (logged in as client)
   if (clientUser) return <ClientPortal clientUser={clientUser} onLogout={clientLogout} />;
