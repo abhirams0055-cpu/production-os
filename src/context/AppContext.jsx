@@ -211,7 +211,7 @@ export function AppProvider({ children }) {
     }]).select().single();
     if (data) {
       setShoots(p => [...p, { id: data.id, clientName: data.client_name, projectName: data.project_name, shootType: data.shoot_type, date: data.date, location: data.location, crew: data.crew || [], notes: data.notes, docsLink: data.docs_link, status: data.status }]);
-      logActivity('shoot_added', `added shoot "${shoot.projectName}" for ${shoot.clientName} on ${shoot.date}`, currentUser);
+      playBookingSound(); logActivity('shoot_added', `added shoot "${shoot.projectName}" for ${shoot.clientName} on ${shoot.date}`, currentUser);
     }
   };
 
@@ -222,14 +222,14 @@ export function AppProvider({ children }) {
       crew: shoot.crew, notes: shoot.notes, docs_link: shoot.docsLink
     }).eq('id', id);
     setShoots(p => p.map(s => s.id === id ? { ...s, ...shoot } : s));
-    logActivity('shoot_updated', `updated shoot "${shoot.projectName}"`, currentUser);
+    playUpdateSound(); logActivity('shoot_updated', `updated shoot "${shoot.projectName}"`, currentUser);
   };
 
   const deleteShoot = async (id) => {
     const shoot = shoots.find(s => s.id === id);
     await supabase.from('shoots').delete().eq('id', id);
     setShoots(p => p.filter(s => s.id !== id));
-    logActivity('shoot_deleted', `deleted shoot "${shoot?.projectName || id}"`, currentUser);
+    playRejectedSound(); logActivity('shoot_deleted', `deleted shoot "${shoot?.projectName || id}"`, currentUser);
   };
 
   const setDateMark = async (date, status) => {
@@ -257,6 +257,7 @@ export function AppProvider({ children }) {
     if (data) {
       setTasks(p => [...p, { id: data.id, title: data.title, description: data.description, assignedTo: data.assigned_to, deadline: data.deadline, priority: data.priority, status: data.status, project: data.project }]);
       logActivity('task_added', `added task "${task.title}"`, currentUser);
+      playTaskSound();
       // Email assigned member
       const member = team.find(m => m.id === task.assignedTo);
       if (member && member.id !== currentUser?.id) {
@@ -280,8 +281,10 @@ export function AppProvider({ children }) {
     }
     if (prev?.status !== 'completed' && task.status === 'completed') {
       logActivity('task_completed', `completed task "${task.title}"`, currentUser);
+      playApprovedSound();
     } else {
       logActivity('task_updated', `updated task "${task.title}"`, currentUser);
+      playUpdateSound();
     }
   };
 
@@ -298,7 +301,7 @@ export function AppProvider({ children }) {
     }]).select().single();
     if (data) {
       setClients(p => [...p, { id: data.id, name: data.name, contact: data.contact, phone: data.phone, email: data.email, projects: [] }]);
-      logActivity('client_added', `added client "${client.name}"`, currentUser);
+      playMemberSound(); logActivity('client_added', `added client "${client.name}"`, currentUser);
     }
   };
 
@@ -311,7 +314,7 @@ export function AppProvider({ children }) {
       setClients(p => p.map(c => c.id === clientId ? {
         ...c, projects: [...c.projects, { id: data.id, name: data.name, status: data.status, shootId: data.shoot_id, docsLink: data.docs_link, team: data.team || [] }]
       } : c));
-      logActivity('project_added', `added project "${project.name}"`, currentUser);
+      playTaskSound(); logActivity('project_added', `added project "${project.name}"`, currentUser);
     }
   };
 
@@ -323,7 +326,7 @@ export function AppProvider({ children }) {
     setClients(p => p.map(c => c.id === clientId ? {
       ...c, projects: c.projects.map(pr => pr.id === projectId ? { ...pr, ...project } : pr)
     } : c));
-    logActivity('project_updated', `updated project "${project.name}"`, currentUser);
+    playUpdateSound(); logActivity('project_updated', `updated project "${project.name}"`, currentUser);
   };
 
   const deleteClient = async (clientId) => {
@@ -331,7 +334,7 @@ export function AppProvider({ children }) {
     await supabase.from('projects').delete().eq('client_id', clientId);
     await supabase.from('clients').delete().eq('id', clientId);
     setClients(p => p.filter(c => c.id !== clientId));
-    logActivity('client_deleted', `deleted client "${client?.name || clientId}"`, currentUser);
+    playRejectedSound(); logActivity('client_deleted', `deleted client "${client?.name || clientId}"`, currentUser);
   };
 
   const deleteProject = async (clientId, projectId) => {
@@ -341,7 +344,7 @@ export function AppProvider({ children }) {
     setClients(p => p.map(c => c.id === clientId ? {
       ...c, projects: c.projects.filter(pr => pr.id !== projectId)
     } : c));
-    logActivity('project_deleted', `deleted project "${project?.name || projectId}"`, currentUser);
+    playRejectedSound(); logActivity('project_deleted', `deleted project "${project?.name || projectId}"`, currentUser);
   };
 
   const submitBooking = async (booking) => {
@@ -404,7 +407,7 @@ export function AppProvider({ children }) {
     const { error } = await supabase.from('bookings').delete().eq('id', id);
     if (error) { console.error('deleteBooking error:', error); return; }
     setBookings(p => p.filter(b => b.id !== id));
-    logActivity('booking_deleted', `deleted booking from ${booking?.clientName || id}`, currentUser);
+    playRejectedSound(); logActivity('booking_deleted', `deleted booking from ${booking?.clientName || id}`, currentUser);
   };
 
   const clientLogin = (email, password) => {
