@@ -112,7 +112,40 @@ export function AppProvider({ children }) {
   };
 
   useEffect(() => {
-    if (currentUser || clientUser) loadData();
+    if (!currentUser && !clientUser) return;
+    loadData();
+
+    // Real-time: bookings
+    const bookingsSub = supabase
+      .channel('bookings-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
+        supabase.from('bookings').select('*').order('submitted_at', { ascending: false }).then(({ data }) => {
+          if (data) setBookings(data.map(b => ({
+            id: b.id, clientName: b.client_name, projectName: b.project_name,
+            contactName: b.contact_name, phone: b.phone, email: b.email,
+            preferredDate: b.preferred_date, shootDays: b.shoot_days,
+            status: b.status, submittedAt: b.submitted_at, notes: b.notes || '', clientUserId: b.client_user_id || null
+          })));
+        });
+      })
+      .subscribe();
+
+    // Real-time: activity log
+    const activitySub = supabase
+      .channel('activity-changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'activity_log' }, (payload) => {
+        const a = payload.new;
+        setActivityLog(prev => [{ id: a.id, action: a.action, message: a.message, userId: a.user_id, userName: a.user_name, ts: a.ts }, ...prev].slice(0, 500));
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'activity_log' }, () => {
+        setActivityLog([]);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(bookingsSub);
+      supabase.removeChannel(activitySub);
+    };
   }, [currentUser, clientUser]);
 
   const login = (email, password) => {
