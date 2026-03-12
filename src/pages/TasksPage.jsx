@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Plus, X, Trash2, CheckCircle, Circle, Clock } from 'lucide-react';
+import { Plus, X, Trash2, CheckCircle, Circle, Clock, MessageSquare, Paperclip } from 'lucide-react';
+import ChatPanel from '../components/ChatPanel';
 
 const PRIORITIES = ['low','medium','high'];
 const STATUSES = ['pending','in-progress','completed'];
@@ -67,6 +68,7 @@ export default function TasksPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [filter, setFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
+  const [openChat, setOpenChat] = useState(null); // task id
 
   const today = new Date();
 
@@ -207,6 +209,19 @@ export default function TasksPage() {
                         )}
                       </div>
                     )}
+
+                    {/* Chat toggle */}
+                    <div style={{ marginTop:'10px', borderTop:'1px solid var(--border)', paddingTop:'8px' }}>
+                      <button onClick={() => setOpenChat(openChat === task.id ? null : task.id)}
+                        style={{ background:'none', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:'6px', color: openChat === task.id ? 'var(--accent)' : 'var(--text-muted)', fontSize:'12px', fontFamily:'DM Sans', padding:'4px 0' }}>
+                        <MessageSquare size={13}/> {openChat === task.id ? 'Hide' : 'Comments & Files'}
+                      </button>
+                      {openChat === task.id && (
+                        <div style={{ marginTop:'10px', background:'var(--surface2)', borderRadius:'10px', border:'1px solid var(--border)', overflow:'hidden', maxHeight:'360px', display:'flex', flexDirection:'column' }}>
+                          <ChatPanel roomType="task" roomId={String(task.id)} roomLabel={task.title} currentUser={currentUser} />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
