@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabase';
 
 const TEAM = [
@@ -111,8 +111,9 @@ export function AppProvider({ children }) {
     setLoading(false);
   };
 
-  const [unreadMessages, setUnreadMessages] = useState({}); // roomId -> count
-  const [currentChatRoom, setCurrentChatRoom] = useState(null); // track open room to avoid false unreads
+  const [unreadMessages, setUnreadMessages] = useState({});
+  const currentChatRoomRef = useRef(null);
+  const setCurrentChatRoom = (roomId) => { currentChatRoomRef.current = roomId; };
 
   useEffect(() => {
     if (!currentUser && !clientUser) return;
@@ -155,7 +156,7 @@ export function AppProvider({ children }) {
         if (String(m.sender_id) === String(sender?.id)) return;
         setUnreadMessages(prev => {
           const roomKey = m.room_id;
-          if (currentChatRoom === roomKey) return prev; // already viewing this room
+          if (currentChatRoomRef.current === roomKey) return prev;
           return { ...prev, [roomKey]: (prev[roomKey] || 0) + 1 };
         });
       })
