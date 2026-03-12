@@ -1,5 +1,13 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabase';
+import {
+  emailTaskAssigned, emailBookingStatus, emailNewBookingAdmin,
+  emailMemberAdded, emailMemberUpdated
+} from '../utils/emailService';
+import {
+  playChatSound, playBookingSound, playApprovedSound, playRejectedSound,
+  playTaskSound, playMemberSound, playUpdateSound
+} from '../utils/sounds';
 
 const TEAM = [
   { id: 1, name: 'Aaram', role: 'admin', email: 'hello@teamaaram.com', password: 'Aaram@111', title: 'Aaram Head' },
@@ -119,10 +127,21 @@ export function AppProvider({ children }) {
     if (!currentUser && !clientUser) return;
     loadData();
 
-    // Real-time: bookings
+    // Real-time: bookings — play sound when new booking arrives
     const bookingsSub = supabase
       .channel('bookings-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bookings' }, () => {
+        playBookingSound();
+        supabase.from('bookings').select('*').order('id', { ascending: false }).then(({ data }) => {
+          if (data) setBookings(data.map(b => ({
+            id: b.id, clientName: b.client_name, projectName: b.project_name,
+            contactName: b.contact_name, phone: b.phone, email: b.email,
+            preferredDate: b.preferred_date, shootDays: b.shoot_days,
+            status: b.status, submittedAt: b.submitted_at, notes: b.notes || '', clientUserId: b.client_user_id || null
+          })));
+        });
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'bookings' }, () => {
         supabase.from('bookings').select('*').order('id', { ascending: false }).then(({ data }) => {
           if (data) setBookings(data.map(b => ({
             id: b.id, clientName: b.client_name, projectName: b.project_name,
@@ -154,6 +173,7 @@ export function AppProvider({ children }) {
         const m = payload.new;
         // Don't count own messages or messages in currently open room
         if (String(m.sender_id) === String(sender?.id)) return;
+        playChatSound();
         setUnreadMessages(prev => {
           const roomKey = m.room_id;
           if (currentChatRoomRef.current === roomKey) return prev;
@@ -241,6 +261,11 @@ export function AppProvider({ children }) {
     if (data) {
       setTasks(p => [...p, { id: data.id, title: data.title, description: data.description, assignedTo: data.assigned_to, deadline: data.deadline, priority: data.priority, status: data.status, project: data.project }]);
       logActivity('task_added', `added task "${task.title}"`, currentUser);
+      // Email assigned member
+      const member = team.find(m => m.id === task.assignedTo);
+      if (member && member.id !== currentUser?.id) {
+        emailTaskAssigned({ task, member, by: currentUser });
+      }
     }
   };
 
@@ -252,6 +277,13 @@ export function AppProvider({ children }) {
       priority: task.priority, status: task.status, project: task.project
     }).eq('id', id);
     setTasks(p => p.map(t => t.id === id ? { ...t, ...task } : t));
+    // Email if assignee changed
+    if (prev?.assignedTo !== task.assignedTo) {
+      const member = team.find(m => m.id === task.assignedTo);
+      if (member && member.id !== currentUser?.id) {
+        emailTaskAssigned({ task, member, by: currentUser });
+      }
+    }
     if (prev?.status !== 'completed' && task.status === 'completed') {
       logActivity('task_completed', `completed task "${task.title}"`, currentUser);
     } else {
@@ -327,13 +359,12 @@ export function AppProvider({ children }) {
       submitted_at: new Date().toISOString(),
     }]).select().single();
     if (error) { console.error('submitBooking error:', error); return; }
-    if (data) setBookings(p => [{
-      id: data.id, clientName: data.client_name, projectName: data.project_name,
-      contactName: data.contact_name, phone: data.phone, email: data.email,
-      preferredDate: data.preferred_date, shootDays: data.shoot_days,
-      status: data.status, submittedAt: data.submitted_at, notes: data.notes || '',
-      clientUserId: data.client_user_id
-    }, ...p]);
+    if (data) {
+      const newBooking = { id: data.id, clientName: data.client_name, projectName: data.project_name, contactName: data.contact_name, phone: data.phone, email: data.email, preferredDate: data.preferred_date, shootDays: data.shoot_days, status: data.status, submittedAt: data.submitted_at, notes: data.notes || '', clientUserId: data.client_user_id };
+      setBookings(p => [newBooking, ...p]);
+      playBookingSound();
+      emailNewBookingAdmin({ booking: newBooking });
+    }
   };
 
   const approveBooking = async (id) => {
@@ -343,6 +374,8 @@ export function AppProvider({ children }) {
     if (error) { console.error('approveBooking error:', error); return; }
     setBookings(p => p.map(b => b.id === id ? { ...b, status: 'approved' } : b));
     logActivity('booking_approved', `approved booking from ${booking.clientName}`, currentUser);
+    playApprovedSound();
+    emailBookingStatus({ booking, status: 'approved' });
     for (let i = 0; i < booking.shootDays; i++) {
       const d = new Date(booking.preferredDate);
       d.setDate(d.getDate() + i);
@@ -361,6 +394,8 @@ export function AppProvider({ children }) {
     if (error) { console.error('rejectBooking error:', error); return; }
     setBookings(p => p.map(b => b.id === id ? { ...b, status: 'rejected' } : b));
     logActivity('booking_rejected', `rejected booking from ${booking?.clientName || id}`, currentUser);
+    playRejectedSound();
+    emailBookingStatus({ booking, status: 'rejected' });
   };
 
   const updateBooking = async (id, updates) => {
@@ -426,6 +461,8 @@ export function AppProvider({ children }) {
     const newMember = { ...member, id: newId };
     setTeam(p => [...p, newMember]);
     logActivity('member_added', `added team member "${member.name}" (${member.title})`, currentUser);
+    playMemberSound();
+    emailMemberAdded({ member, password: member.password, by: currentUser });
   };
 
   const updateMember = (id, member) => {
@@ -435,7 +472,17 @@ export function AppProvider({ children }) {
       const updated = { ...JSON.parse(localStorage.getItem('aaram_user')), ...member };
       localStorage.setItem('aaram_user', JSON.stringify(updated));
     }
+    // Build change summary
+    const changes = [];
+    if (existing?.name !== member.name) changes.push(`Name: ${existing?.name} → ${member.name}`);
+    if (existing?.title !== member.title) changes.push(`Title: ${existing?.title} → ${member.title}`);
+    if (existing?.role !== member.role) changes.push(`Role: ${existing?.role} → ${member.role}`);
+    if (existing?.email !== member.email) changes.push(`Email: ${existing?.email} → ${member.email}`);
+    if (member.password && existing?.password !== member.password) changes.push(`Password was changed`);
+    const updatedMember = { ...existing, ...member };
     logActivity('member_updated', `updated team member "${member.name || existing?.name}"`, currentUser);
+    playUpdateSound();
+    emailMemberUpdated({ member: updatedMember, changes: changes.join('\n') || 'Profile updated', by: currentUser });
   };
 
   const deleteMember = (id) => {
