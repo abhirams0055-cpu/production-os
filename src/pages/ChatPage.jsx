@@ -5,8 +5,21 @@ import ChatPanel from '../components/ChatPanel';
 import { MessageSquare, Hash, User, ChevronRight, Search, Bell } from 'lucide-react';
 
 export default function ChatPage() {
-  const { currentUser, team, tasks, bookings, clients, clientAccounts } = useApp();
+  const { currentUser, team, tasks, bookings, clients, clientAccounts, unreadMessages, clearUnread, setCurrentChatRoom } = useApp();
   const [activeRoom, setActiveRoom] = useState({ type:'general', id:'general', label:'General' });
+
+  const openRoom = (room) => {
+    setActiveRoom(room);
+    setCurrentChatRoom(room.id);
+    clearUnread(room.id);
+  };
+
+  // clear unread on initial room
+  useEffect(() => {
+    setCurrentChatRoom(activeRoom.id);
+    clearUnread(activeRoom.id);
+    return () => setCurrentChatRoom(null);
+  }, []);
   const [search, setSearch] = useState('');
   const [unread, setUnread] = useState({});
 
@@ -62,7 +75,7 @@ export default function ChatPage() {
               {cat.rooms.map(room => {
                 const isActive = activeRoom.id === room.id;
                 return (
-                  <button key={room.id} onClick={() => setActiveRoom(room)} style={{
+                  <button key={room.id} onClick={() => openRoom(room)} style={{
                     width:'100%', textAlign:'left', padding:'8px 16px', border:'none', cursor:'pointer',
                     background: isActive ? 'rgba(201,169,110,0.12)' : 'none',
                     borderLeft: isActive ? '2px solid var(--accent)' : '2px solid transparent',
@@ -76,6 +89,11 @@ export default function ChatPage() {
                       {room.sub && <div style={{ fontSize:'10px', color:'var(--text-dim)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{room.sub}</div>}
                     </div>
                     {room.isClient && <span style={{ fontSize:'9px', background:'rgba(201,169,110,0.15)', color:'var(--accent)', padding:'2px 5px', borderRadius:'4px', fontFamily:'Syne', fontWeight:'700' }}>CLIENT</span>}
+                    {unreadMessages[room.id] > 0 && (
+                      <span style={{ background:'#ff4444', color:'white', borderRadius:'50%', width:'18px', height:'18px', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'10px', fontWeight:'700', flexShrink:0 }}>
+                        {unreadMessages[room.id]}
+                      </span>
+                    )}
                   </button>
                 );
               })}
