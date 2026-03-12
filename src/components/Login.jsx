@@ -13,7 +13,7 @@ export default function Login() {
   const handleTeamLogin = async () => {
     setLoading(true); setError('');
     await new Promise(r => setTimeout(r, 400));
-    const ok = login(email, password);
+    const ok = await login(email, password);
     if (!ok) setError('Invalid email or password');
     setLoading(false);
   };
@@ -21,7 +21,7 @@ export default function Login() {
   const handleClientLogin = async () => {
     setLoading(true); setError('');
     await new Promise(r => setTimeout(r, 400));
-    const ok = clientLogin(email, password);
+    const ok = await clientLogin(email, password);
     if (!ok) setError('Invalid credentials. Contact Team Aaram to get your login.');
     setLoading(false);
   };
