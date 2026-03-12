@@ -227,24 +227,55 @@ export default function BookingsPage() {
 
               {/* Action buttons */}
               {isAdmin && b.status === 'pending' && (
-                <div style={{ display:'flex', gap:'10px', marginTop:'4px' }}>
+                <div style={{ display:'flex', gap:'10px', marginTop:'4px', flexWrap:'wrap' }}>
                   <button className="btn-primary" style={{ fontSize:'12px', padding:'8px 16px' }} onClick={() => approveBooking(b.id)}>
                     <Check size={13} /> Approve & Block Dates
                   </button>
                   <button className="btn-danger" style={{ fontSize:'12px', padding:'8px 16px' }} onClick={() => rejectBooking(b.id)}>
                     <X size={13} /> Reject
                   </button>
+                  <a href={`https://wa.me/${b.phone?.replace(/\D/g,'')}?text=${encodeURIComponent(`Hi ${b.clientName}! 👋\n\nWe've received your shoot booking request for *${b.projectName}* on *${fmt(b.preferredDate)}*.\n\nOur team is reviewing it and will confirm shortly.\n\n— Team Aaram 🎬`)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    style={{ display:'inline-flex', alignItems:'center', gap:'7px', padding:'8px 14px', background:'#25D366', border:'none', borderRadius:'8px', color:'white', fontSize:'12px', fontWeight:'600', textDecoration:'none', cursor:'pointer' }}>
+                    <span style={{ fontSize:'14px' }}>💬</span> WhatsApp — Received
+                  </a>
                 </div>
               )}
 
               {b.status === 'approved' && (
-                <div style={{ padding:'10px 14px', background:'rgba(100,200,100,0.08)', border:'1px solid rgba(100,200,100,0.2)', borderRadius:'8px', fontSize:'12px', color:'#6dc76d' }}>
-                  ✓ Booking approved. Dates blocked in calendar and shoot added.
+                <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+                  <div style={{ padding:'10px 14px', background:'rgba(100,200,100,0.08)', border:'1px solid rgba(100,200,100,0.2)', borderRadius:'8px', fontSize:'12px', color:'#6dc76d' }}>
+                    ✓ Booking approved. Dates blocked in calendar and shoot added.
+                  </div>
+                  {isAdmin && (
+                    <div style={{ display:'flex', gap:'8px', flexWrap:'wrap' }}>
+                      <a href={`https://wa.me/${b.phone?.replace(/\D/g,'')}?text=${encodeURIComponent(`Hi ${b.clientName}! 🎉\n\nYour shoot booking for *${b.projectName}* on *${fmt(b.preferredDate)}* has been *APPROVED* ✅\n\nPlease be ready. We'll be in touch with more details soon.\n\n— Team Aaram 🎬`)}`}
+                        target="_blank" rel="noopener noreferrer"
+                        style={{ display:'inline-flex', alignItems:'center', gap:'7px', padding:'7px 14px', background:'#25D366', border:'none', borderRadius:'8px', color:'white', fontSize:'12px', fontWeight:'600', textDecoration:'none' }}>
+                        <span>💬</span> WhatsApp — Approved
+                      </a>
+                      <a href={`https://wa.me/${b.phone?.replace(/\D/g,'')}?text=${encodeURIComponent(`Hi ${b.clientName}! 🎬\n\nJust a reminder — your shoot *${b.projectName}* is *TOMORROW* on *${fmt(b.preferredDate)}*!\n\nPlease be ready on time. Reach out if you have any questions.\n\n— Team Aaram`)}`}
+                        target="_blank" rel="noopener noreferrer"
+                        style={{ display:'inline-flex', alignItems:'center', gap:'7px', padding:'7px 14px', background:'#128C7E', border:'none', borderRadius:'8px', color:'white', fontSize:'12px', fontWeight:'600', textDecoration:'none' }}>
+                        <span>⏰</span> WhatsApp — Reminder
+                      </a>
+                    </div>
+                  )}
                 </div>
               )}
+
               {b.status === 'rejected' && (
-                <div style={{ padding:'10px 14px', background:'rgba(255,60,60,0.08)', border:'1px solid rgba(255,60,60,0.2)', borderRadius:'8px', fontSize:'12px', color:'#ff6b6b' }}>
-                  ✗ Booking rejected.
+                <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+                  <div style={{ padding:'10px 14px', background:'rgba(255,60,60,0.08)', border:'1px solid rgba(255,60,60,0.2)', borderRadius:'8px', fontSize:'12px', color:'#ff6b6b' }}>
+                    ✗ Booking rejected.
+                  </div>
+                  {isAdmin && (
+                    <a href={`https://wa.me/${b.phone?.replace(/\D/g,'')}?text=${encodeURIComponent(`Hi ${b.clientName},\n\nUnfortunately, we're unable to confirm your shoot booking for *${b.projectName}* on *${fmt(b.preferredDate)}* at this time.\n\nPlease contact us to reschedule or for more information.\n\n— Team Aaram 🎬`)}`}
+                      target="_blank" rel="noopener noreferrer"
+                      style={{ display:'inline-flex', alignItems:'center', gap:'7px', padding:'7px 14px', background:'#555', border:'none', borderRadius:'8px', color:'white', fontSize:'12px', fontWeight:'600', textDecoration:'none', width:'fit-content' }}>
+                      <span>💬</span> WhatsApp — Rejected
+                    </a>
+                  )}
                 </div>
               )}
 
