@@ -62,7 +62,7 @@ export function AppProvider({ children }) {
         supabase.from('date_marks').select('*'),
         supabase.from('tasks').select('*').order('created_at'),
         supabase.from('clients').select('*').order('created_at'),
-        supabase.from('bookings').select('*').order('submitted_at', { ascending: false }),
+        supabase.from('bookings').select('*').order('id', { ascending: false }),
         supabase.from('projects').select('*').order('created_at'),
         supabase.from('activity_log').select('*').order('ts', { ascending: false }).limit(500),
       ]);
@@ -119,7 +119,7 @@ export function AppProvider({ children }) {
     const bookingsSub = supabase
       .channel('bookings-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
-        supabase.from('bookings').select('*').order('submitted_at', { ascending: false }).then(({ data }) => {
+        supabase.from('bookings').select('*').order('id', { ascending: false }).then(({ data }) => {
           if (data) setBookings(data.map(b => ({
             id: b.id, clientName: b.client_name, projectName: b.project_name,
             contactName: b.contact_name, phone: b.phone, email: b.email,
@@ -298,19 +298,28 @@ export function AppProvider({ children }) {
   };
 
   const submitBooking = async (booking) => {
-    const { data } = await supabase.from('bookings').insert([{
+    const { data, error } = await supabase.from('bookings').insert([{
       client_name: booking.clientName, project_name: booking.projectName,
       contact_name: booking.contactName, phone: booking.phone, email: booking.email,
       preferred_date: booking.preferredDate, shoot_days: booking.shootDays, status: 'pending',
       client_user_id: booking.clientUserId ? String(booking.clientUserId) : null,
+      submitted_at: new Date().toISOString(),
     }]).select().single();
-    if (data) setBookings(p => [{ id: data.id, clientName: data.client_name, projectName: data.project_name, contactName: data.contact_name, phone: data.phone, email: data.email, preferredDate: data.preferred_date, shootDays: data.shoot_days, status: data.status, submittedAt: data.submitted_at, notes: data.notes || '', clientUserId: data.client_user_id }, ...p]);
+    if (error) { console.error('submitBooking error:', error); return; }
+    if (data) setBookings(p => [{
+      id: data.id, clientName: data.client_name, projectName: data.project_name,
+      contactName: data.contact_name, phone: data.phone, email: data.email,
+      preferredDate: data.preferred_date, shootDays: data.shoot_days,
+      status: data.status, submittedAt: data.submitted_at, notes: data.notes || '',
+      clientUserId: data.client_user_id
+    }, ...p]);
   };
 
   const approveBooking = async (id) => {
     const booking = bookings.find(b => b.id === id);
     if (!booking) return;
-    await supabase.from('bookings').update({ status: 'approved' }).eq('id', id);
+    const { error } = await supabase.from('bookings').update({ status: 'approved' }).eq('id', id);
+    if (error) { console.error('approveBooking error:', error); return; }
     setBookings(p => p.map(b => b.id === id ? { ...b, status: 'approved' } : b));
     logActivity('booking_approved', `approved booking from ${booking.clientName}`, currentUser);
     for (let i = 0; i < booking.shootDays; i++) {
@@ -327,27 +336,26 @@ export function AppProvider({ children }) {
 
   const rejectBooking = async (id) => {
     const booking = bookings.find(b => b.id === id);
-    await supabase.from('bookings').update({ status: 'rejected' }).eq('id', id);
+    const { error } = await supabase.from('bookings').update({ status: 'rejected' }).eq('id', id);
+    if (error) { console.error('rejectBooking error:', error); return; }
     setBookings(p => p.map(b => b.id === id ? { ...b, status: 'rejected' } : b));
     logActivity('booking_rejected', `rejected booking from ${booking?.clientName || id}`, currentUser);
   };
 
   const updateBooking = async (id, updates) => {
-    await supabase.from('bookings').update({
-      client_name: updates.clientName,
-      contact_name: updates.contactName,
-      phone: updates.phone,
-      email: updates.email,
-      preferred_date: updates.preferredDate,
-      shoot_days: updates.shootDays,
-      notes: updates.notes,
+    const { error } = await supabase.from('bookings').update({
+      client_name: updates.clientName, contact_name: updates.contactName,
+      phone: updates.phone, email: updates.email,
+      preferred_date: updates.preferredDate, shoot_days: updates.shootDays, notes: updates.notes,
     }).eq('id', id);
+    if (error) { console.error('updateBooking error:', error); return; }
     setBookings(p => p.map(b => b.id === id ? { ...b, ...updates } : b));
   };
 
   const deleteBooking = async (id) => {
     const booking = bookings.find(b => b.id === id);
-    await supabase.from('bookings').delete().eq('id', id);
+    const { error } = await supabase.from('bookings').delete().eq('id', id);
+    if (error) { console.error('deleteBooking error:', error); return; }
     setBookings(p => p.filter(b => b.id !== id));
     logActivity('booking_deleted', `deleted booking from ${booking?.clientName || id}`, currentUser);
   };
