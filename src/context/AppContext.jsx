@@ -1,10 +1,6 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabase';
 import {
-  emailTaskAssigned, emailBookingStatus, emailNewBookingAdmin,
-  emailMemberAdded, emailMemberUpdated
-} from '../utils/emailService';
-import {
   playChatSound, playBookingSound, playApprovedSound, playRejectedSound,
   playTaskSound, playMemberSound, playUpdateSound
 } from '../utils/sounds';
@@ -264,7 +260,6 @@ export function AppProvider({ children }) {
       // Email assigned member
       const member = team.find(m => m.id === task.assignedTo);
       if (member && member.id !== currentUser?.id) {
-        emailTaskAssigned({ task, member, by: currentUser });
       }
     }
   };
@@ -281,7 +276,6 @@ export function AppProvider({ children }) {
     if (prev?.assignedTo !== task.assignedTo) {
       const member = team.find(m => m.id === task.assignedTo);
       if (member && member.id !== currentUser?.id) {
-        emailTaskAssigned({ task, member, by: currentUser });
       }
     }
     if (prev?.status !== 'completed' && task.status === 'completed') {
@@ -363,7 +357,6 @@ export function AppProvider({ children }) {
       const newBooking = { id: data.id, clientName: data.client_name, projectName: data.project_name, contactName: data.contact_name, phone: data.phone, email: data.email, preferredDate: data.preferred_date, shootDays: data.shoot_days, status: data.status, submittedAt: data.submitted_at, notes: data.notes || '', clientUserId: data.client_user_id };
       setBookings(p => [newBooking, ...p]);
       playBookingSound();
-      emailNewBookingAdmin({ booking: newBooking });
     }
   };
 
@@ -375,7 +368,6 @@ export function AppProvider({ children }) {
     setBookings(p => p.map(b => b.id === id ? { ...b, status: 'approved' } : b));
     logActivity('booking_approved', `approved booking from ${booking.clientName}`, currentUser);
     playApprovedSound();
-    emailBookingStatus({ booking, status: 'approved' });
     for (let i = 0; i < booking.shootDays; i++) {
       const d = new Date(booking.preferredDate);
       d.setDate(d.getDate() + i);
@@ -395,7 +387,6 @@ export function AppProvider({ children }) {
     setBookings(p => p.map(b => b.id === id ? { ...b, status: 'rejected' } : b));
     logActivity('booking_rejected', `rejected booking from ${booking?.clientName || id}`, currentUser);
     playRejectedSound();
-    emailBookingStatus({ booking, status: 'rejected' });
   };
 
   const updateBooking = async (id, updates) => {
@@ -462,7 +453,6 @@ export function AppProvider({ children }) {
     setTeam(p => [...p, newMember]);
     logActivity('member_added', `added team member "${member.name}" (${member.title})`, currentUser);
     playMemberSound();
-    emailMemberAdded({ member, password: member.password, by: currentUser });
   };
 
   const updateMember = (id, member) => {
@@ -482,7 +472,6 @@ export function AppProvider({ children }) {
     const updatedMember = { ...existing, ...member };
     logActivity('member_updated', `updated team member "${member.name || existing?.name}"`, currentUser);
     playUpdateSound();
-    emailMemberUpdated({ member: updatedMember, changes: changes.join('\n') || 'Profile updated', by: currentUser });
   };
 
   const deleteMember = (id) => {
