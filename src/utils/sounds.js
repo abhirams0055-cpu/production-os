@@ -91,3 +91,35 @@ export const playUpdateSound = () => {
   beep(660, 0.08, 'sine', 0.25);
   beep(880, 0.15, 'sine', 0.2, 0.1);
 };
+
+// 🚨 Alert — long urgent ring (repeating alarm, ~3 seconds)
+export const playAlertSound = () => {
+  try {
+    const ctx = getCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    // Siren-style: alternating high/low, 6 pulses
+    const pairs = [
+      [1200, 0], [800, 0.25],
+      [1200, 0.5], [800, 0.75],
+      [1200, 1.0], [800, 1.25],
+      [1200, 1.5], [800, 1.75],
+      [1200, 2.0], [800, 2.25],
+      [1400, 2.5], // final loud peak
+    ];
+    pairs.forEach(([freq, delay]) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+      gain.gain.setValueAtTime(0.001, ctx.currentTime + delay);
+      gain.gain.linearRampToValueAtTime(0.55, ctx.currentTime + delay + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.22);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.25);
+    });
+  } catch (e) {
+    console.warn('Alert sound error:', e);
+  }
+};
