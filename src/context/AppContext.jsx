@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabase';
 import {
   playChatSound, playBookingSound, playApprovedSound, playRejectedSound,
-  playTaskSound, playMemberSound, playUpdateSound
+  playTaskSound, playMemberSound, playUpdateSound, playAlertSound
 } from '../utils/sounds';
 
 const AppContext = createContext(null);
@@ -31,6 +31,7 @@ export function AppProvider({ children }) {
     return saved ? JSON.parse(saved) : null;
   });
   const [unreadMessages, setUnreadMessages] = useState({});
+  const [incomingAlert, setIncomingAlert] = useState(null);
   const currentChatRoomRef = useRef(null);
   const setCurrentChatRoom = (roomId) => { currentChatRoomRef.current = roomId; };
 
@@ -145,12 +146,27 @@ export function AppProvider({ children }) {
         });
       }).subscribe();
 
+    // Real-time: alerts channel
+    const alertSub = supabase.channel('alerts-channel')
+      .on('broadcast', { event: 'alert' }, (payload) => {
+        const { targets, senderId } = payload.payload || {};
+        if (String(senderId) === String((currentUser || clientUser)?.id)) return;
+        // targets: null/[] = all, or array of member ids
+        if (!targets || targets.length === 0 || targets.includes(String((currentUser || clientUser)?.id))) {
+          playAlertSound();
+          setIncomingAlert(payload.payload);
+          setTimeout(() => setIncomingAlert(null), 8000);
+        }
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(bookingsSub);
       supabase.removeChannel(activitySub);
       supabase.removeChannel(messagesSub);
       supabase.removeChannel(teamSub);
       supabase.removeChannel(clientAccSub);
+      supabase.removeChannel(alertSub);
     };
   }, [currentUser, clientUser]);
 
@@ -242,7 +258,7 @@ export function AppProvider({ children }) {
     playRejectedSound(); logActivity('project_deleted', `deleted project "${project?.name || projectId}"`, currentUser);
   };
   const submitBooking = async (booking) => {
-    const { data, error } = await supabase.from('bookings').insert([{ client_name: booking.clientName, project_name: booking.projectName, contact_name: booking.contactName, phone: booking.phone, email: booking.email, preferred_date: booking.preferredDate, shoot_days: booking.shootDays, status: 'pending', client_user_id: booking.clientUserId ? String(booking.clientUserId) : null, submitted_at: new Date().toISOString() }]).select().single();
+    const { data, error } = await supabase.from('bookings').insert([{ client_name: booking.clientName, project_name: booking.projectName, contact_name: booking.contactName, phone: booking.phone, email: booking.email, preferred_date: booking.preferredDate, shoot_days: booking.shootDays, status: 'pending', notes: booking.notes || '', client_user_id: booking.clientUserId ? String(booking.clientUserId) : null, submitted_at: new Date().toISOString() }]).select().single();
     if (error) { console.error('submitBooking error:', error); return; }
     if (data) { setBookings(p => [{ id: data.id, clientName: data.client_name, projectName: data.project_name, contactName: data.contact_name, phone: data.phone, email: data.email, preferredDate: data.preferred_date, shootDays: data.shoot_days, status: data.status, submittedAt: data.submitted_at, notes: data.notes || '', clientUserId: data.client_user_id }, ...p]); playBookingSound(); }
   };
@@ -339,6 +355,17 @@ export function AppProvider({ children }) {
     setClientAccounts(p => p.filter(a => a.id !== id));
   };
 
+  const sendAlert = async ({ message, targets }) => {
+    await supabase.channel('alerts-channel').send({
+      type: 'broadcast',
+      event: 'alert',
+      payload: { message, targets, senderId: currentUser?.id, senderName: currentUser?.name, sentAt: new Date().toISOString() },
+    });
+    playAlertSound();
+  };
+
+  const dismissAlert = () => setIncomingAlert(null);
+
   const clearUnread = (roomId) => { setUnreadMessages(prev => { const n = { ...prev }; delete n[roomId]; return n; }); };
   const totalUnread = Object.values(unreadMessages).reduce((a, b) => a + b, 0);
 
@@ -362,6 +389,7 @@ export function AppProvider({ children }) {
       clientAccounts, clientUser, clientLogin, clientLogout, addClientAccount, updateClientAccount, deleteClientAccount,
       notifications,
       unreadMessages, clearUnread, totalUnread, setCurrentChatRoom,
+      incomingAlert, dismissAlert, sendAlert,
     }}>
       {children}
     </AppContext.Provider>
