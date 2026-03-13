@@ -29,15 +29,15 @@ export default function ClientPortal({ clientUser, onLogout }) {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const prevDays = new Date(year, month, 0).getDate();
 
-  // Count approved/pending bookings for the currently viewed month
+  // Count total shoot DAYS (not bookings) for the currently viewed month
   const bookingsThisMonth = myBookings.filter(b => {
     if (b.status === 'rejected') return false;
     const d = new Date(b.preferredDate);
     return d.getFullYear() === year && d.getMonth() === month;
   });
-  const overLimit = bookingsThisMonth.length >= MONTHLY_LIMIT;
-  const remaining = Math.max(0, MONTHLY_LIMIT - bookingsThisMonth.length);
-
+  const daysUsedThisMonth = bookingsThisMonth.reduce((sum, b) => sum + (b.shootDays || 1), 0);
+  const overLimit = daysUsedThisMonth >= MONTHLY_LIMIT;
+  const remaining = Math.max(0, MONTHLY_LIMIT - daysUsedThisMonth);
   const cells = [];
   for (let i = firstDay - 1; i >= 0; i--) cells.push({ day: prevDays - i, current: false, date: null });
   for (let d = 1; d <= daysInMonth; d++) {
@@ -69,6 +69,10 @@ export default function ClientPortal({ clientUser, onLogout }) {
   };
 
   const handleShootDaysChange = (n) => {
+    // If selecting more days than remaining quota, switch to special request mode
+    if (!isRequest && n > remaining) {
+      setIsRequest(true);
+    }
     setShootDays(n);
     setSelectedDates(p => p.slice(0, n));
   };
@@ -162,19 +166,19 @@ export default function ClientPortal({ clientUser, onLogout }) {
                 <div style={{ fontSize:'13px', fontWeight:'700', color: overLimit ? '#ffa500' : '#6dc76d' }}>
                   {overLimit
                     ? `Monthly limit reached for ${MONTHS[month]}`
-                    : `${remaining} booking slot${remaining !== 1 ? 's' : ''} remaining for ${MONTHS[month]}`
+                    : `${remaining} shoot day${remaining !== 1 ? 's' : ''} remaining for ${MONTHS[month]}`
                   }
                 </div>
                 <div style={{ fontSize:'11px', color:'var(--text-muted)', marginTop:'2px' }}>
                   {overLimit
-                    ? 'You\'ve used your 2 bookings this month. You can still send a special request below — our team will review it.'
-                    : `Standard clients get ${MONTHLY_LIMIT} bookings per month. You've used ${bookingsThisMonth.length}.`
+                    ? `You've used your ${MONTHLY_LIMIT} shoot days this month. You can still send a special request below — our team will review it.`
+                    : `Standard clients get ${MONTHLY_LIMIT} shoot days per month. You've used ${daysUsedThisMonth}.`
                   }
                 </div>
               </div>
               {!overLimit && (
                 <div style={{ marginLeft:'auto', background:'rgba(109,199,109,0.15)', borderRadius:'20px', padding:'3px 10px', fontSize:'11px', fontWeight:'800', color:'#6dc76d', fontFamily:'Syne', flexShrink:0 }}>
-                  {bookingsThisMonth.length}/{MONTHLY_LIMIT}
+                  {daysUsedThisMonth}/{MONTHLY_LIMIT}
                 </div>
               )}
             </div>
@@ -187,7 +191,7 @@ export default function ClientPortal({ clientUser, onLogout }) {
                 </div>
                 <h2 style={{ fontSize:'18px', fontWeight:'800', marginBottom:'8px' }}>Monthly Limit Reached</h2>
                 <p style={{ color:'var(--text-muted)', fontSize:'13px', lineHeight:'1.6', marginBottom:'24px', maxWidth:'360px', margin:'0 auto 24px' }}>
-                  You've already booked {bookingsThisMonth.length} shoots in {MONTHS[month]}. Standard accounts are limited to {MONTHLY_LIMIT} per month.<br/><br/>
+                  You've already used {daysUsedThisMonth} shoot day{daysUsedThisMonth !== 1 ? 's' : ''} in {MONTHS[month]}. Standard accounts are limited to {MONTHLY_LIMIT} shoot days per month.<br/><br/>
                   Need more? Send a special request and our team will review it.
                 </p>
                 <button className="btn-primary" style={{ gap:'8px' }} onClick={() => setIsRequest(true)}>
@@ -347,15 +351,22 @@ export default function ClientPortal({ clientUser, onLogout }) {
                   <div style={{ marginTop:'16px' }}>
                     <label className="label">Shoot Days</label>
                     <div style={{ display:'flex', gap:'8px' }}>
-                      {[1,2].map(n => (
-                        <button key={n} onClick={() => handleShootDaysChange(n)} style={{
-                          flex:1, padding:'10px', borderRadius:'8px', border:'1px solid',
-                          background: shootDays === n ? 'var(--accent)' : 'var(--surface2)',
-                          borderColor: shootDays === n ? 'var(--accent)' : 'var(--border)',
-                          color: shootDays === n ? '#1a1008' : 'var(--text)',
-                          fontSize:'14px', fontWeight:'700', cursor:'pointer', fontFamily:'Syne'
-                        }}>{n}</button>
-                      ))}
+                      {[1,2].map(n => {
+                        const wouldExceed = n > remaining;
+                        return (
+                          <button key={n} onClick={() => handleShootDaysChange(n)} title={wouldExceed ? 'Exceeds your remaining days — will be sent as special request' : ''} style={{
+                            flex:1, padding:'10px', borderRadius:'8px', border:'1px solid',
+                            background: shootDays === n ? 'var(--accent)' : 'var(--surface2)',
+                            borderColor: shootDays === n ? 'var(--accent)' : wouldExceed ? 'rgba(255,165,0,0.4)' : 'var(--border)',
+                            color: shootDays === n ? '#1a1008' : wouldExceed ? '#ffa500' : 'var(--text)',
+                            fontSize:'14px', fontWeight:'700', cursor:'pointer', fontFamily:'Syne',
+                            position:'relative'
+                          }}>
+                            {n}
+                            {wouldExceed && <span style={{ fontSize:'8px', display:'block', color:'#ffa500', fontWeight:'600' }}>request</span>}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
