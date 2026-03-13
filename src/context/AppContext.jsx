@@ -34,6 +34,7 @@ export function AppProvider({ children }) {
   const [incomingAlert, setIncomingAlert] = useState(null);
   const currentChatRoomRef = useRef(null);
   const setCurrentChatRoom = (roomId) => { currentChatRoomRef.current = roomId; };
+  const alertChannelRef = useRef(null);
 
   const logActivity = async (action, message, user) => {
     if (!user) return;
@@ -94,6 +95,30 @@ export function AppProvider({ children }) {
     seedTeamIfEmpty().then(() => { if (currentUser || clientUser) loadData(); });
   }, []);
 
+  // Always-on alert channel — active as long as a user is logged in
+  useEffect(() => {
+    const user = currentUser || clientUser;
+    if (!user) return;
+
+    const ch = supabase.channel('alerts-global')
+      .on('broadcast', { event: 'alert' }, (payload) => {
+        const { targets, senderId } = payload.payload || {};
+        if (String(senderId) === String(user.id)) return;
+        if (!targets || targets.length === 0 || targets.includes(String(user.id))) {
+          playAlertSound();
+          setIncomingAlert(payload.payload);
+          setTimeout(() => setIncomingAlert(null), 8000);
+        }
+      })
+      .subscribe();
+
+    alertChannelRef.current = ch;
+    return () => {
+      supabase.removeChannel(ch);
+      alertChannelRef.current = null;
+    };
+  }, [currentUser?.id, clientUser?.id]);
+
   useEffect(() => {
     if (!currentUser && !clientUser) return;
     loadData();
@@ -146,19 +171,7 @@ export function AppProvider({ children }) {
         });
       }).subscribe();
 
-    // Real-time: alerts channel
-    const alertSub = supabase.channel('alerts-channel')
-      .on('broadcast', { event: 'alert' }, (payload) => {
-        const { targets, senderId } = payload.payload || {};
-        if (String(senderId) === String((currentUser || clientUser)?.id)) return;
-        // targets: null/[] = all, or array of member ids
-        if (!targets || targets.length === 0 || targets.includes(String((currentUser || clientUser)?.id))) {
-          playAlertSound();
-          setIncomingAlert(payload.payload);
-          setTimeout(() => setIncomingAlert(null), 8000);
-        }
-      })
-      .subscribe();
+
 
     return () => {
       supabase.removeChannel(bookingsSub);
@@ -166,7 +179,7 @@ export function AppProvider({ children }) {
       supabase.removeChannel(messagesSub);
       supabase.removeChannel(teamSub);
       supabase.removeChannel(clientAccSub);
-      supabase.removeChannel(alertSub);
+
     };
   }, [currentUser, clientUser]);
 
@@ -356,11 +369,22 @@ export function AppProvider({ children }) {
   };
 
   const sendAlert = async ({ message, targets }) => {
-    await supabase.channel('alerts-channel').send({
-      type: 'broadcast',
-      event: 'alert',
-      payload: { message, targets, senderId: currentUser?.id, senderName: currentUser?.name, sentAt: new Date().toISOString() },
-    });
+    // Send via the persistent subscribed channel so Supabase routes it correctly
+    const ch = alertChannelRef.current;
+    if (ch) {
+      await ch.send({
+        type: 'broadcast',
+        event: 'alert',
+        payload: {
+          message,
+          targets: targets || [],
+          senderId: String(currentUser?.id),
+          senderName: currentUser?.name,
+          sentAt: new Date().toISOString(),
+        },
+      });
+    }
+    // Also ring locally for the sender
     playAlertSound();
   };
 
