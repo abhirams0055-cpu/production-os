@@ -1,7 +1,7 @@
 import { useApp } from '../context/AppContext';
 import {
   LayoutDashboard, Calendar, ClipboardList, CheckSquare,
-  FolderOpen, Users, LogOut, ExternalLink, Menu, X, Building2, Activity, MessageSquare
+  FolderOpen, Users, LogOut, ExternalLink, Menu, X, Building2, Activity, MessageSquare, Mail
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -15,6 +15,7 @@ const navItems = [
   { id: 'team', label: 'Team', icon: Users },
   { id: 'chat', label: 'Chat', icon: MessageSquare },
   { id: 'activity', label: 'Activity', icon: Activity, adminOnly: true },
+  { id: 'email', label: 'Email', icon: Mail, adminOnly: true },
 ];
 
 export default function Sidebar() {
@@ -61,7 +62,7 @@ export default function Sidebar() {
       {/* ── DESKTOP SIDEBAR ── */}
       <div className="desktop-sidebar" style={{
         width:'220px', minHeight:'100vh',
-        background:'#083f3e',
+        background:'linear-gradient(180deg, #0a1f1c 0%, #061412 100%)',
         borderRight:'1px solid rgba(201,169,110,0.15)',
         display:'flex', flexDirection:'column',
         padding:'20px 14px', flexShrink:0,
@@ -109,7 +110,7 @@ export default function Sidebar() {
       {/* ── MOBILE TOP BAR ── */}
       <div className="mobile-topbar" style={{
         display:'none', position:'fixed', top:0, left:0, right:0,
-        background:'#083f3e', borderBottom:'1px solid rgba(201,169,110,0.2)',
+        background:'linear-gradient(90deg, #0a1f1c, #0d2620)', borderBottom:'1px solid rgba(201,169,110,0.15)',
         padding:'10px 16px', zIndex:50,
         alignItems:'center', justifyContent:'space-between', height:'56px'
       }}>
@@ -130,7 +131,7 @@ export default function Sidebar() {
           <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.6)' }} onClick={() => setMobileOpen(false)} />
           <div style={{
             position:'absolute', top:0, right:0, bottom:0, width:'260px',
-            background:'#083f3e', borderLeft:'1px solid rgba(201,169,110,0.2)',
+            background:'linear-gradient(180deg, #0a1f1c 0%, #061412 100%)', borderLeft:'1px solid rgba(201,169,110,0.15)',
             display:'flex', flexDirection:'column', padding:'20px 14px',
             animation:'slideInRight 0.2s ease'
           }}>
@@ -181,7 +182,7 @@ export default function Sidebar() {
       {/* ── MOBILE BOTTOM NAV ── */}
       <div className="mobile-bottom-nav" style={{
         display:'none', position:'fixed', bottom:0, left:0, right:0,
-        background:'#083f3e', borderTop:'1px solid rgba(201,169,110,0.2)',
+        background:'rgba(8,20,18,0.95)', backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)', borderTop:'1px solid rgba(201,169,110,0.12)',
         padding:'6px 4px', zIndex:50,
         justifyContent:'space-around', alignItems:'center'
       }}>
