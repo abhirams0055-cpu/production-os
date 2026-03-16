@@ -394,6 +394,89 @@ select.input option { background: #1a2420; }
   animation: shimmer 1.5s infinite;
 }
 
+
+/* ════════════════════════════════════════
+   PAGE-SPECIFIC BACKGROUND IMAGES
+   Real cinematic photos, heavily blurred + 
+   very low opacity so content stays clear
+════════════════════════════════════════ */
+
+/* Shared base for all pages */
+.page-dashboard, .page-calendar, .page-bookings, .page-tasks,
+.page-projects, .page-team, .page-chat, .page-activity, .page-clients {
+  position: relative;
+}
+
+/* All bg images sit behind content */
+.page-dashboard::before, .page-calendar::before, .page-bookings::before,
+.page-tasks::before, .page-projects::before, .page-team::before,
+.page-chat::before, .page-activity::before, .page-clients::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(12px) saturate(0.4) brightness(0.18);
+  opacity: 0.55;
+  transform: scale(1.05); /* hide blur edges */
+}
+
+/* Content sits above */
+.page-dashboard > *, .page-calendar > *, .page-bookings > *,
+.page-tasks > *, .page-projects > *, .page-team > *,
+.page-chat > *, .page-activity > *, .page-clients > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Dashboard: cinematic city/studio lights ── */
+.page-dashboard::before {
+  background-image: url('https://images.unsplash.com/photo-1536240478700-b869ad10e128?w=1600&q=60&auto=format');
+}
+
+/* ── Calendar: film / schedule / clapper ── */
+.page-calendar::before {
+  background-image: url('https://images.unsplash.com/photo-1524169113253-c6ba17398f36?w=1600&q=60&auto=format');
+}
+
+/* ── Bookings: meeting / handshake / studio ── */
+.page-bookings::before {
+  background-image: url('https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=1600&q=60&auto=format');
+}
+
+/* ── Tasks: desk / workspace / focus ── */
+.page-tasks::before {
+  background-image: url('https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=1600&q=60&auto=format');
+}
+
+/* ── Projects: film production / crew ── */
+.page-projects::before {
+  background-image: url('https://images.unsplash.com/photo-1617575521317-d2974f3b56d2?w=1600&q=60&auto=format');
+}
+
+/* ── Team: crew / people / collaboration ── */
+.page-team::before {
+  background-image: url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&q=60&auto=format');
+}
+
+/* ── Chat: communication / dark moody ── */
+.page-chat::before {
+  background-image: url('https://images.unsplash.com/photo-1577563908411-5077b6dc7624?w=1600&q=60&auto=format');
+}
+
+/* ── Activity: data / logs / dark tech ── */
+.page-activity::before {
+  background-image: url('https://images.unsplash.com/photo-1518770660439-4636190af475?w=1600&q=60&auto=format');
+}
+
+/* ── Clients: luxury / brand / corporate ── */
+.page-clients::before {
+  background-image: url('https://images.unsplash.com/photo-1497366216548-37526070297c?w=1600&q=60&auto=format');
+}
+
 /* ════════════════════════════════════════
    MOBILE RESPONSIVE
 ════════════════════════════════════════ */
