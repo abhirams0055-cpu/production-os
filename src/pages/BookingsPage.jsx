@@ -115,7 +115,7 @@ export default function BookingsPage() {
   };
 
   return (
-    <div style={{ padding:'28px', maxWidth:'1000px' }}>
+    <div className="page-bookings" style={{ padding:'28px', maxWidth:'1000px' }}>
       <div style={{ marginBottom:'24px' }}>
         <h1 style={{ fontSize:'22px', fontWeight:'800' }}>Client Bookings</h1>
         <p style={{ color:'var(--text-muted)', fontSize:'13px', marginTop:'2px' }}>Review and manage incoming booking requests</p>
@@ -145,13 +145,18 @@ export default function BookingsPage() {
       ) : (
         <div style={{ display:'flex', flexDirection:'column', gap:'14px' }}>
           {filtered.map(b => (
-            <div key={b.id} className="card" style={{ borderLeft:`3px solid ${statusColor[b.status]}` }}>
+            <div key={b.id} className="card" style={{ borderLeft:`3px solid ${b.projectName?.startsWith('[SPECIAL REQUEST]') ? '#ffa500' : statusColor[b.status]}` }}>
 
               {/* Header */}
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'14px', flexWrap:'wrap', gap:'10px' }}>
                 <div>
-                  <h3 style={{ fontSize:'16px', fontWeight:'700', marginBottom:'2px' }}>{b.clientName}</h3>
-                  <p style={{ fontSize:'13px', color:'var(--accent)', fontWeight:'600' }}>{b.projectName}</p>
+                  <div style={{ display:'flex', alignItems:'center', gap:'8px', flexWrap:'wrap', marginBottom:'2px' }}>
+                    <h3 style={{ fontSize:'16px', fontWeight:'700' }}>{b.clientName}</h3>
+                    {b.projectName?.startsWith('[SPECIAL REQUEST]') && (
+                      <span style={{ padding:'2px 8px', borderRadius:'20px', fontSize:'10px', fontWeight:'800', fontFamily:'Syne', background:'rgba(255,165,0,0.15)', color:'#ffa500', border:'1px solid rgba(255,165,0,0.3)' }}>⚡ SPECIAL REQUEST</span>
+                    )}
+                  </div>
+                  <p style={{ fontSize:'13px', color:'var(--accent)', fontWeight:'600' }}>{b.projectName?.replace('[SPECIAL REQUEST] ','')}</p>
                 </div>
                 <div style={{ display:'flex', gap:'8px', alignItems:'center', flexWrap:'wrap' }}>
                   <span style={{ padding:'4px 12px', borderRadius:'20px', fontSize:'11px', fontWeight:'700', fontFamily:'Syne', background:statusBg[b.status], color:statusColor[b.status], textTransform:'capitalize' }}>{b.status}</span>
