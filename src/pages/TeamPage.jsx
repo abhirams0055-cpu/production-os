@@ -215,7 +215,7 @@ export default function TeamPage() {
   };
 
   return (
-    <div style={{ padding:'28px', maxWidth:'960px' }}>
+    <div className="page-team" style={{ padding:'28px', maxWidth:'960px' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'24px' }}>
         <div>
           <h1 style={{ fontSize:'22px', fontWeight:'800' }}>Team</h1>
