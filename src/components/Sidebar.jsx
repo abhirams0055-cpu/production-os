@@ -1,7 +1,7 @@
 import { useApp } from '../context/AppContext';
 import {
   LayoutDashboard, Calendar, ClipboardList, CheckSquare,
-  FolderOpen, Users, LogOut, ExternalLink, Menu, X, Building2, Activity, MessageSquare, Mail
+  FolderOpen, Users, LogOut, ExternalLink, Menu, X, Building2, Activity, MessageSquare
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -15,7 +15,6 @@ const navItems = [
   { id: 'team', label: 'Team', icon: Users },
   { id: 'chat', label: 'Chat', icon: MessageSquare },
   { id: 'activity', label: 'Activity', icon: Activity, adminOnly: true },
-  { id: 'email', label: 'Email', icon: Mail, adminOnly: true },
 ];
 
 export default function Sidebar() {
