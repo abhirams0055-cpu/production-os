@@ -22,7 +22,7 @@ export default function Dashboard() {
   const shootTypeColors = { 'Reel':'var(--accent)', 'Advertisement':'#7aadff', 'YouTube Video':'#ff6b35', 'Brand Film':'#c678dd' };
 
   return (
-    <div style={{ padding:'28px', maxWidth:'1200px' }}>
+    <div className="page-dashboard" style={{ padding:'28px', maxWidth:'1200px' }}>
       {/* Header */}
       <div style={{ marginBottom:'28px' }}>
         <h1 style={{ fontSize:'24px', fontWeight:'800', color:'var(--text)', marginBottom:'4px' }}>
