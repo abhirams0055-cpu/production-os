@@ -61,7 +61,7 @@ function MemberAvatar({ name, role }) {
   const colors = ['#083f3e', '#2d6a4f', '#1b4332', '#0d3b2e', '#145a32'];
   const color = colors[name?.charCodeAt(0) % colors.length] || '#083f3e';
   return (
-    <div style={{
+    <div className="page-activity" style={{
       width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0,
       background: `linear-gradient(135deg, ${color}, #c9a96e)`,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
