@@ -77,7 +77,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div style={{ display:'flex', height:'calc(100vh - 0px)', overflow:'hidden' }}>
+    <div className="page-chat" style={{ display:'flex', height:'calc(100vh - 0px)', overflow:'hidden' }}>
       {/* Sidebar */}
       <div style={{ width:'260px', flexShrink:0, borderRight:'1px solid var(--border)', display:'flex', flexDirection:'column', background:'var(--surface)', overflowY:'auto' }}>
         <div style={{ padding:'20px 16px 12px', borderBottom:'1px solid var(--border)' }}>
