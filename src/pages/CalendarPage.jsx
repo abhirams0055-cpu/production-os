@@ -173,7 +173,7 @@ export default function CalendarPage() {
   };
 
   return (
-    <div style={{ padding:'28px', maxWidth:'1200px' }}>
+    <div className="page-calendar" style={{ padding:'28px', maxWidth:'1200px' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'24px' }}>
         <div>
           <h1 style={{ fontSize:'22px', fontWeight:'800' }}>Shoot Calendar</h1>
