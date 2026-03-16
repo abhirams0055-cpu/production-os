@@ -130,7 +130,7 @@ export default function ProjectsPage() {
   };
 
   return (
-    <div style={{ padding:'28px', maxWidth:'1000px' }}>
+    <div className="page-projects" style={{ padding:'28px', maxWidth:'1000px' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'24px' }}>
         <div>
           <h1 style={{ fontSize:'22px', fontWeight:'800' }}>Client Projects</h1>
